@@ -588,6 +588,91 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   white-space: pre-wrap;
 }
 /* ▲ FIN TEXTE BIO ═══════════════════════════════════════════ */
+/* ╔═══════════════════════════════════════════════════════════╗
+   ║  SECTION CONTACT — ÉTOILES RÉSEAUX SOCIAUX              ║
+   ╠═══════════════════════════════════════════════════════════╣
+   ║  PNG étoiles : 120 × 120 px — fond transparent          ║
+   ║  PNG bulles  : 200 × 80 px  — fond transparent          ║
+   ╚═══════════════════════════════════════════════════════════╝ */
+
+/* ▼ ZONE D'AJUSTEMENT — taille des étoiles et bulles */
+:root {
+  --star-size:        80px;  /* ← taille de base de chaque étoile    */
+  --bubble-contact-w: 180px;  /* ← largeur des bulles de description   */
+}
+
+#contact-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 32;
+  opacity: 0;
+}
+#contact-stars.contact-visible {
+  opacity: 1;
+}
+
+.contact-star {
+  position: absolute;
+  width:  var(--star-size);
+  height: var(--star-size);
+  pointer-events: inherit;
+  cursor: pointer;
+  transform-origin: center center;
+  animation: star-pulse var(--star-dur, 3s) ease-in-out infinite;
+  animation-delay: var(--star-delay, 0s);
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+.contact-star img.star-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── Clignotement : grossit lentement, rétrécit rapidement ──
+   ▼ ZONE D'AJUSTEMENT
+   60%  → point max (grossit lentement sur 0→60%)
+   80%  → point min (rétrécit vite sur 60→80%)
+   dur  → via --star-dur en JS (ex: 2.5s à 4s)             */
+@keyframes star-pulse {
+  0%   { transform: scale(0.75); }
+  60%  { transform: scale(1.15); }
+  80%  { transform: scale(0.80); }
+  100% { transform: scale(0.75); }
+}
+
+/* Survol : animation coupée, étoile grosse et fixe */
+.contact-star:hover {
+  animation: none;
+  transform: scale(1.6);
+  z-index: 10;
+}
+/* ▲ FIN ANIMATION ══════════════════════════════════════════ */
+
+/* ── Bulle de description ──
+   ▼ ZONE D'AJUSTEMENT
+   bottom: gap entre étoile et bulle (augmente pour éloigner)  */
+.contact-star .star-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.7);
+  width: var(--bubble-contact-w);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.18s cubic-bezier(.34,1.56,.64,1);
+  transform-origin: bottom center;
+}
+.contact-star .star-bubble img {
+  width: 100%; height: auto; display: block;
+}
+.contact-star:hover .star-bubble {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+/* ▲ FIN BULLES CONTACT ══════════════════════════════════════ */
+
 .block.active { pointer-events:auto; }
 
 .sec-label { font-size:0.56rem; letter-spacing:0.34em; color:var(--red); text-transform:uppercase; margin-bottom:0.65rem; opacity:0.85; }
@@ -658,6 +743,9 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
       <div class="bio-col-text" id="bio-text-right"></div>
     </div>
   </div>
+
+  <!-- Section contact — étoiles réseaux sociaux -->
+  <div id="contact-stars"></div>
 
   <!-- Nuages musicaux — générés par JS -->
   <div id="clouds-container"></div>
@@ -1228,10 +1316,8 @@ var BUBBLE_ZONES = [
   { pMin: 0.50, pMax: 0.65, png: 'assets/bubble-video.png'   },
   /* Section ABOUT / bio */
   { pMin: 0.65, pMax: 0.80, png: 'assets/bubble-bio.png'     },
-  /* Section concerts passés */
-  { pMin: 0.80, pMax: 0.90, png: 'assets/bubble-concert.png' },
   /* Section CONTACT */
-  { pMin: 0.90, pMax: 1.00, png: 'assets/bubble-contact.png' },
+  { pMin: 0.80, pMax: 1.00, png: 'assets/bubble-contact.png' },
 ];
 /* ▲ FIN ZONE D'AJUSTEMENT BULLES ════════════════════════ */
 
@@ -1645,6 +1731,165 @@ function updateBio(p) {
   }
 }
 
+// ══════════════════════════════════════════════════════════
+// SECTION CONTACT — ÉTOILES RÉSEAUX SOCIAUX
+// ══════════════════════════════════════════════════════════
+
+/* ════════════════════════════════════════════════════════
+   ▼ ZONE D'AJUSTEMENT — TIMING SECTION CONTACT
+
+   CONTACT_P_IN  : p auquel les étoiles apparaissent
+   CONTACT_P_OUT : p auquel elles disparaissent (fin de page)
+   ════════════════════════════════════════════════════════ */
+var CONTACT_P_IN  = 0.88;  /* ← quand les étoiles apparaissent  */
+var CONTACT_P_OUT = 1.00;
+/* ▲ FIN ════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   ▼ ZONE D'AJUSTEMENT — ÉTOILES
+
+   Chaque étoile : {
+     png    : image de l'étoile (assets/star-XXX.png)
+     bubble : image de la bulle (assets/bubble-XXX.png)
+     url    : lien cliquable
+     x      : position horizontale en % de l'écran (0–100)
+     y      : position verticale  en % de l'écran (0–100)
+     size   : taille relative (1 = --star-size, 1.3 = 30% plus grand)
+     dur    : durée du cycle de clignotement (secondes)
+     delay  : décalage de départ (secondes)
+   }
+
+   PNG étoiles recommandé : 120 × 120 px
+   PNG bulles recommandé  : 200 × 80 px
+   ════════════════════════════════════════════════════════ */
+var CONTACT_STARS = [
+  {
+    png:   'assets/star-facebook.png',
+    bubble:'assets/bubble-facebook.png',
+    url:   'https://www.facebook.com/noiseladder',
+    x: 30, y: 30,           /* ← position % écran (0=gauche/haut, 100=droite/bas) */
+    size: 0.8,              /* ← taille relative (1 = --star-size)                */
+    dur: 3.2, delay: 0.0,   /* ← durée cycle (s) / délai départ (s)              */
+  },
+  {
+    png:   'assets/star-youtube.png',
+    bubble:'assets/bubble-youtube.png',
+    url:   'https://www.youtube.com/@noiseladder',
+    x: 72, y: 15,
+    size: 1.1,
+    dur: 2.8, delay: 0.6,
+  },
+  {
+    png:   'assets/star-instagram.png',
+    bubble:'assets/bubble-instagram.png',
+    url:   'https://www.instagram.com/noise_ladder',
+    x: 65, y: 65,
+    size: 1.2,
+    dur: 2.5, delay: 0.3,
+  },
+  {
+    png:   'assets/star-mail.png',
+    bubble:'assets/bubble-mail.png',
+    url:   'mailto:noiseladder@gmail.com',
+    x: 82, y: 45,
+    size: 1.6,
+    dur: 4.0, delay: 0.8,
+  },
+  {
+    png:   'assets/star-soundcloud.png',
+    bubble:'assets/bubble-soundcloud.png',
+    url:   'https://soundcloud.com/noiseladder',
+    x: 20, y: 78,
+    size: 1.5,
+    dur: 3.5, delay: 1.5,
+  },
+];
+/* ▲ FIN ZONE D'AJUSTEMENT ÉTOILES ═══════════════════════ */
+
+var contactWrap    = null;
+var contactBuilt   = false;
+var contactVisible = false;
+
+function buildContactStars() {
+  contactWrap = document.getElementById('contact-stars');
+
+  CONTACT_STARS.forEach(function(cfg) {
+    var star = document.createElement('div');
+    star.className = 'contact-star';
+
+    /* Position et taille via style inline */
+    var sizePx = 'calc(var(--star-size) * ' + cfg.size + ')';
+    star.style.cssText = [
+      'left:'  + cfg.x + '%;',
+      'top:'   + cfg.y + '%;',
+      'width:' + sizePx + ';',
+      'height:'+ sizePx + ';',
+      '--star-dur:'  + cfg.dur   + 's;',
+      '--star-delay:'+ cfg.delay + 's;',
+      'margin-left: calc(' + sizePx + ' / -2);',  /* centre sur le point */
+      'margin-top:  calc(' + sizePx + ' / -2);',
+    ].join('');
+
+    /* Image étoile — SVG fallback si PNG manquant */
+    var img = document.createElement('img');
+    img.className = 'star-img';
+    img.src = cfg.png;
+    img.alt = '';
+    img.onerror = function() {
+      /* Fallback SVG étoile colorée si le PNG n'existe pas */
+      this.onerror = null;
+      this.src = 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+        '<polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" ' +
+        'fill="#ede9e0" stroke="#ff6600" stroke-width="2"/></svg>'
+      );
+    };
+    star.appendChild(img);
+
+    /* Bulle description */
+    var bubble = document.createElement('div');
+    bubble.className = 'star-bubble';
+    var bImg = document.createElement('img');
+    bImg.src = cfg.bubble;
+    bImg.alt = '';
+    bubble.appendChild(bImg);
+    star.appendChild(bubble);
+
+    /* Lien */
+    star.addEventListener('click', function() {
+      window.open(cfg.url, '_blank');
+    });
+
+    contactWrap.appendChild(star);
+  });
+
+  contactBuilt = true;
+}
+
+function updateContact(p) {
+  if(!contactWrap) contactWrap = document.getElementById('contact-stars');
+  if(!contactWrap) return;
+  if(!contactBuilt) buildContactStars();
+
+  if(p >= CONTACT_P_IN) {
+    var op = Math.min(1, (p - CONTACT_P_IN) / 0.04);
+    contactWrap.style.opacity = op;
+    // Active pointer-events seulement quand vraiment visible
+    contactWrap.style.pointerEvents = op > 0.05 ? 'auto' : 'none';
+    if(!contactVisible) {
+      contactVisible = true;
+      contactWrap.classList.add('contact-visible');
+    }
+  } else {
+    contactWrap.style.opacity = 0;
+    contactWrap.style.pointerEvents = 'none'; // désactive immédiatement
+    if(contactVisible) {
+      contactVisible = false;
+      contactWrap.classList.remove('contact-visible');
+    }
+  }
+}
+
 function updateClouds(p){
   var vw = window.innerWidth;
   var vh = window.innerHeight;
@@ -1780,7 +2025,7 @@ function onScroll(){
   updateBubble(p, true);
 
   drawSky(p); updateStars(p); updateAltitude(p);
-  updateCharacter(p); updateLadder(p); updateBlocks(p); updateClouds(p); updateSatellite(p); updateBio(p);
+  updateCharacter(p); updateLadder(p); updateBlocks(p); updateClouds(p); updateSatellite(p); updateBio(p); updateContact(p);
 }
 
 // ── INIT ──
