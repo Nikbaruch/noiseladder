@@ -8,89 +8,249 @@
 <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
 <style>
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  VARIABLES GLOBALES                                       ║
-   ╚═══════════════════════════════════════════════════════════╝ */
+/* ═══════════════════════════════════════════════════════════
+   VARIABLES GLOBALES
+   Ces variables CSS centralisent tous les réglages du site.
+   Modifie ici pour ajuster desktop, puis surcharge dans
+   @media(max-width:768px) pour le mobile.
+   ═══════════════════════════════════════════════════════════ */
 :root {
-  --nl-x:      center;
-  --nl-y:      170px;
-  --ground-h:  519px;
-  --ground-mid:260px;
-  --ladder-w:  240px;
-  --char-w:    290px;
-  --char-h:    370px;
-  --red:       #ff1a1a;
-  --orange:    #ff6600;
-  --fg:        #ede9e0;
+  /* ── Lettres NOISE LADDER ── */
+  --nl-x:       center;  /* position horizontale (center / px / %)   */
+  --nl-y:       170px;   /* position verticale depuis le bas du sol   */
+
+  /* ── Sol ── */
+  --ground-h:   519px;   /* hauteur totale du sol                     */
+  --ground-mid: 260px;   /* moitié du sol (utilisé pour le hint)      */
+
+  /* ── Échelle ── */
+  --ladder-w:   100px;   /* largeur de l'échelle                      */
+
+  /* ── Personnage ── */
+  --char-w:     290px;   /* largeur du personnage                     */
+  --char-h:     370px;   /* hauteur du personnage                     */
+  --char-hoff:  0px;     /* décalage horizontal depuis le centre      */
+  --char-voff:  0px;     /* décalage vertical (non utilisé en direct) */
+
+  /* ── Bulle BD ── */
+  --bubble-w:   150px;   /* largeur de la bulle                       */
+  --bubble-top: 40vh;    /* non utilisé directement, conservé         */
+
+  /* ── Couleurs ── */
+  --red:        #ff1a1a;
+  --orange:     #ff6600;
+  --fg:         #ede9e0; /* couleur texte principal                   */
+
+  /* ── Satellite desktop ──
+     Ajuste ces valeurs pour aligner les panels sur ton PNG
+     satellite-body.png                                               */
+  --sat-w:        1200px;  /* largeur du PNG satellite                */
+  --sat-h:         600px;  /* hauteur du PNG satellite                */
+  --sat-left-x:     40px;  /* panel vidéo : depuis bord gauche PNG    */
+  --sat-left-y:    190px;  /* panel vidéo : depuis bord haut PNG      */
+  --sat-left-w:    310px;  /* panel vidéo : largeur                   */
+  --sat-left-h:    220px;  /* panel vidéo : hauteur                   */
+  --sat-right-x:   850px;  /* panel playlist : depuis bord gauche PNG */
+  --sat-right-y:   190px;  /* panel playlist : depuis bord haut PNG   */
+  --sat-right-w:   310px;  /* panel playlist : largeur                */
+  --sat-right-h:   220px;  /* panel playlist : hauteur                */
+
+  /* ── UFO ── */
+  --ufo-w:      1000px;  /* largeur du PNG ufo.png                    */
+  --ufo-h:       800px;  /* hauteur du PNG ufo.png                    */
+  --ufo-top:      20px;  /* distance depuis le haut de l'écran        */
+
+  /* ── Bio ── */
+  --bio-col-gap:  80px;  /* écart depuis le centre pour chaque colonne */
+  --bio-col-w:   400px;  /* largeur d'une colonne de texte             */
+  --bio-col-top:  35vh;  /* position verticale des colonnes            */
+
+  /* ── Étoiles contact ── */
+  --star-size:        80px;  /* taille de base des étoiles             */
+  --bubble-contact-w: 180px; /* largeur des bulles de description      */
 }
 
-*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); font-family:"Share Tech Mono",monospace; }
 
-#progress { position:fixed; top:0; left:0; height:2px; width:0%; background:var(--red); z-index:1000; box-shadow:0 0 6px var(--red); transition:width .06s linear; }
-#scroller { height:800vh; position:relative; z-index:0; }
-#scene    { position:fixed; inset:0; width:100vw; height:100vh; overflow:hidden; z-index:1; pointer-events:none; }
-#scene .block, #scene #hint, #scene #character, #scene .ext-link, #scene .music-cloud, #scene #satellite-wrap, #scene .sat-interactive { pointer-events:auto; }
+/* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-#sky-canvas   { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
-#stars-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0; transition:opacity 0.8s ease; }
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  background: #060606;
+  color: var(--fg);
+  font-family: "Share Tech Mono", monospace;
+}
 
-#ladder { position:absolute; top:0; bottom:0; left:50%; transform:translateX(-50%); width:var(--ladder-w); z-index:24; background:url("assets/ladder-tile.png") repeat-y top center / 100% auto; }
 
-#ground, #ground-fg { position:absolute; bottom:0; left:0; right:0; height:var(--ground-h); background-repeat:no-repeat; background-position:bottom center; background-size:cover; pointer-events:none; }
-#ground    { z-index:12; background-image:url("assets/ground-bg.png"); }
-#ground-fg { z-index:27; background-image:url("assets/ground-fg.png"); }
+/* ═══════════════════════════════════════════════════════════
+   STRUCTURE PRINCIPALE
+   #progress  → barre rouge en haut (progression scroll)
+   #scroller  → élément invisible qui crée la hauteur de scroll
+   #scene     → conteneur fixe plein écran (tout le visuel)
+   ═══════════════════════════════════════════════════════════ */
+#progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--red);
+  z-index: 1000;
+  box-shadow: 0 0 6px var(--red);
+  transition: width .06s linear;
+}
 
+#scroller {
+  height: 800vh;       /* ← longueur totale du scroll. 800vh = 8 écrans */
+  position: relative;
+  z-index: 0;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none; /* la scène ne capte pas les clics par défaut */
+}
+
+/* Les éléments interactifs dans #scene réactivent les clics */
+#scene .block,
+#scene #hint,
+#scene #character,
+#scene .ext-link,
+#scene .music-cloud,
+#scene #satellite-wrap,
+#scene .sat-interactive {
+  pointer-events: auto;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CIEL & ÉTOILES
+   Deux canvas superposés :
+   #sky-canvas   → dégradé animé (bleu jour → espace noir)
+   #stars-canvas → points blancs (apparaissent en altitude)
+   ═══════════════════════════════════════════════════════════ */
+#sky-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+#stars-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  opacity: 0; /* invisible au départ, géré par JS */
+  transition: opacity 0.8s ease;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ÉCHELLE
+   Élément vertical centré, s'étend de haut en bas.
+   L'image se répète verticalement (repeat-y).
+   ▼ ZONE D'AJUSTEMENT : --ladder-w dans :root
+   ═══════════════════════════════════════════════════════════ */
+#ladder {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--ladder-w);
+  z-index: 24;
+  background: url("assets/ladder-tile.png") repeat-y top center / 100% auto;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SOL
+   #ground    → arrière-plan du sol (derrière l'échelle)
+   #ground-fg → avant-plan du sol (devant le personnage)
+   Les deux slides vers le bas quand on monte (via JS).
+   ▼ ZONE D'AJUSTEMENT : --ground-h dans :root
+   ═══════════════════════════════════════════════════════════ */
+#ground,
+#ground-fg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: var(--ground-h);
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: cover;
+  pointer-events: none;
+}
+#ground    { z-index: 12; background-image: url("assets/ground-bg.png"); }
+#ground-fg { z-index: 27; background-image: url("assets/ground-fg.png"); }
+
+
+/* ═══════════════════════════════════════════════════════════
+   LETTRES NOISE LADDER
+   PNG positionné sur le sol.
+   L'animation noise-flicker s'active au survol (via JS).
+   ▼ ZONE D'AJUSTEMENT : --nl-x et --nl-y dans :root
+   ═══════════════════════════════════════════════════════════ */
 #noise-letters {
-  position:absolute; bottom:0; left:0; right:0; height:var(--ground-h);
-  z-index:26; pointer-events:none;
-  background-image:url("assets/noise-letters.png");
-  background-size:1073px 151px; background-repeat:no-repeat;
-  background-position:var(--nl-x) var(--nl-y);
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: var(--ground-h);
+  z-index: 26;
+  pointer-events: none;
+  background-image: url("assets/noise-letters.png");
+  background-size: 1073px 151px;
+  background-repeat: no-repeat;
+  background-position: var(--nl-x) var(--nl-y);
 }
+
 @keyframes noise-flicker {
-  0%   { background-image:url("assets/letters-noise1.png"); }
-  25%  { background-image:url("assets/letters-noise2.png"); }
-  50%  { background-image:url("assets/letters-noise3.png"); }
-  75%  { background-image:url("assets/letters-noise4.png"); }
-  100% { background-image:url("assets/letters-noise1.png"); }
+  0%   { background-image: url("assets/letters-noise1.png"); }
+  25%  { background-image: url("assets/letters-noise2.png"); }
+  50%  { background-image: url("assets/letters-noise3.png"); }
+  75%  { background-image: url("assets/letters-noise4.png"); }
+  100% { background-image: url("assets/letters-noise1.png"); }
 }
-#noise-letters.noise-active { animation:noise-flicker 0.5s steps(1) infinite; }
+#noise-letters.noise-active {
+  animation: noise-flicker 0.5s steps(1) infinite;
+}
 
-#letters-hitbox { position:fixed; z-index:200; pointer-events:auto; display:block; background:transparent; }
+/* Zone invisible cliquable au-dessus des lettres (desktop uniquement) */
+#letters-hitbox {
+  position: fixed;
+  z-index: 200;
+  pointer-events: auto;
+  display: block;
+  background: transparent;
+}
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  NUAGES MUSICAUX — STYLES                                 ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  .music-cloud      → conteneur principal                 ║
-   ║  .cloud-bg         → image PNG du nuage (base)           ║
-   ║  .cloud-fill       → même PNG, teinté, clip-path progr.  ║
-   ║  .play-btn-img     → PNG bouton play/pause flottant      ║
-   ╚═══════════════════════════════════════════════════════════╝ */
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  NUAGES MUSICAUX — SYSTÈME VISUEL                        ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║                                                           ║
-   ║  Structure DOM par nuage :                               ║
-   ║    .music-cloud                                           ║
-   ║      .cloud-inner       ← scale hover isolé du JS tx    ║
-   ║        img.cloud-bg     ← PNG nuage (layer bas)          ║
-   ║        img.cloud-fill   ← même PNG, teinté, clip-path    ║
-   ║      img.play-btn-img   ← PNG bouton flottant, z devant  ║
-   ║                                                           ║
-   ║  Progression = cloud-fill révélée de gauche à droite     ║
-   ║  via clip-path inset(0 X% 0 0) mis à jour en JS          ║
-   ╚═══════════════════════════════════════════════════════════╝ */
 
-/* ── Conteneur ── */
+/* ═══════════════════════════════════════════════════════════
+   NUAGES MUSICAUX
+   Structure :
+     .music-cloud          → conteneur positionné par JS
+       .cloud-inner        → reçoit le scale hover
+         img.cloud-bg      → PNG nuage de base
+         img.cloud-fill    → même PNG teinté, masqué par clip-path
+       img.play-btn-img    → bouton play/pause flottant
+   ▼ ZONE D'AJUSTEMENT : CLOUD_CONFIG dans le JS
+   ═══════════════════════════════════════════════════════════ */
 .music-cloud {
   position: absolute;
   z-index: 18;
   will-change: transform, opacity;
 }
 
-/* ── Inner : reçoit le scale hover isolément ──
-   ▼ ZONE D'AJUSTEMENT — grossissement au survol du nuage    */
+/* Scale au survol isolé du transform JS */
 .cloud-inner {
   position: absolute;
   inset: 0;
@@ -98,11 +258,10 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   transform-origin: center center;
 }
 .music-cloud:hover .cloud-inner {
-  transform: scale(1.09); /* ← 1.09 = +9%, ajuste librement */
+  transform: scale(1.09); /* ← grossissement au survol */
 }
-/* ▲ FIN ════════════════════════════════════════════════════ */
 
-/* ── PNG nuage de base ── */
+/* PNG de base du nuage */
 .cloud-bg {
   position: absolute;
   inset: 0;
@@ -113,11 +272,9 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   -webkit-user-drag: none;
 }
 
-/* ── PNG nuage teinté (couche de progression)
-   Même image que cloud-bg mais avec un filtre couleur.
-   clip-path est mis à jour par JS selon la progression audio.
-
-   ▼ ZONE D'AJUSTEMENT — couleur de remplissage progression  */
+/* PNG teinté révélé de gauche à droite selon la progression audio
+   ▼ ZONE D'AJUSTEMENT : hue-rotate pour changer la couleur
+      160deg = bleu / 0deg = rouge / 280deg = violet              */
 .cloud-fill {
   position: absolute;
   inset: 0;
@@ -126,180 +283,196 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  /* Teinte appliquée par mix-blend-mode + filtre */
   filter: sepia(1) saturate(3) hue-rotate(160deg) brightness(0.7);
-  /* ← Change hue-rotate pour changer la couleur :
-       0deg   = rouge/brun
-       90deg  = jaune/vert
-       160deg = bleu (défaut)
-       200deg = bleu-violet
-       280deg = violet                                        */
   mix-blend-mode: multiply;
-  clip-path: inset(0 100% 0 0); /* départ : 100% masqué à droite */
+  clip-path: inset(0 100% 0 0); /* départ : entièrement masqué */
   transition: clip-path 0.1s linear;
 }
-/* ▲ FIN ════════════════════════════════════════════════════ */
 
-/* ── Bouton play/pause PNG flottant devant le nuage ──
-   Positionné au centre du nuage, z-index > .cloud-inner
-
-   ▼ ZONE D'AJUSTEMENT — bouton play                        */
+/* Bouton play/pause flottant au centre du nuage
+   ▼ ZONE D'AJUSTEMENT : width/height pour la taille du bouton */
 .play-btn-img {
   position: absolute;
-  /* Centré par JS (left/top calculés selon w/h du nuage)   */
-  z-index: 10;          /* devant le nuage */
+  z-index: 10;
   pointer-events: auto;
   user-select: none;
   -webkit-user-drag: none;
-  /* ── taille du bouton ── */
-  width:  100px;        /* ← ajuste la largeur  */
-  height: 100px;        /* ← ajuste la hauteur  */
-  /* ── centrage depuis le coin haut-gauche du nuage ──     */
+  width: 100px;   /* ← taille du bouton */
+  height: 100px;
   left: 50%; top: 50%;
   transform: translate(-50%, -50%) scale(1);
   transform-origin: center center;
-  /* ── transitions ── */
   transition: transform 0.18s ease, filter 0.15s ease;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
 }
-/* Survol : grossit pour indiquer que c'est cliquable */
-.play-btn-img:hover {
-  transform: translate(-50%, -50%) scale(1.18); /* ← ajuste */
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-}
-/* Clic : s'enfonce */
-.play-btn-img:active {
-  transform: translate(-50%, -50%) scale(0.90); /* ← enfoncement */
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
-}
-/* ▲ FIN ════════════════════════════════════════════════════ */
+.play-btn-img:hover  { transform: translate(-50%,-50%) scale(1.18); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+.play-btn-img:active { transform: translate(-50%,-50%) scale(0.90); filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3)); }
 
-/* titre MY MUSIC supprimé */
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  BULLES BD — ZONE D'AJUSTEMENT                           ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  #speech-bubble  → conteneur de la bulle active         ║
-   ║  img.bubble-img  → PNG de la bulle                      ║
-   ║                                                           ║
-   ║  Position : centrée au-dessus du personnage             ║
-   ║  --bubble-w      → largeur de la bulle (px)             ║
-   ║  --bubble-top    → position verticale depuis le haut    ║
-   ╚═══════════════════════════════════════════════════════════╝ */
-:root {
-  --bubble-w:     150px;   /* ← largeur de la bulle                        */
-  --bubble-top:   40vh;    /* ← position verticale : augmente pour descendre */
-}
-
+/* ═══════════════════════════════════════════════════════════
+   BULLE BD — AU-DESSUS DU PERSONNAGE
+   Apparaît quand le scroll s'arrête.
+   Position calculée depuis le bas : sol + perso + offset.
+   ▼ ZONE D'AJUSTEMENT DESKTOP :
+      --bubble-w   : largeur de la bulle
+      bottom       : ground-h + char-h + offset (-450px ici)
+                     augmente -450px pour monter, diminue pour descendre
+   ═══════════════════════════════════════════════════════════ */
 #speech-bubble {
   position: fixed;
   left: calc(50% + var(--char-hoff));
   transform: translateX(-50%);
-  /* ▼ ZONE D'AJUSTEMENT — position verticale de la bulle
-     Augmente --bubble-top pour descendre, diminue pour monter.
-     Valeur de référence : même top que le personnage (50vh)
-     puis tu ajustes avec --bubble-top jusqu'à ce que ce soit joli. */
-  top: var(--bubble-top);
+  bottom: calc(var(--ground-h) + var(--char-h) + -450px); /* ← ajuste -450px */
   width: var(--bubble-w);
   z-index: 36;
   pointer-events: none;
   opacity: 0;
   will-change: transform, opacity;
 }
-
 #speech-bubble img {
   width: 100%;
   height: auto;
   display: block;
 }
 
-/* Animation d'entrée : rebond depuis le haut */
+/* Animation d'entrée de la bulle */
 @keyframes bubble-bounce-in {
   0%   { transform: translateX(-50%) translateY(-30px) scale(0.6); opacity: 0; }
   60%  { transform: translateX(-50%) translateY(6px)   scale(1.05); opacity: 1; }
   80%  { transform: translateX(-50%) translateY(-4px)  scale(0.97); }
   100% { transform: translateX(-50%) translateY(0)     scale(1);    opacity: 1; }
 }
-#speech-bubble.bubble-visible {
-  animation: bubble-bounce-in 0.45s cubic-bezier(.22,.68,0,1.3) forwards;
-}
-#speech-bubble.bubble-hidden {
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-/* ▲ FIN BULLES BD ══════════════════════════════════════════ */
+#speech-bubble.bubble-visible { animation: bubble-bounce-in 0.45s cubic-bezier(.22,.68,0,1.3) forwards; }
+#speech-bubble.bubble-hidden  { opacity: 0; transition: opacity 0.15s ease; }
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  PERSONNAGE — ZONE D'AJUSTEMENT MANUEL                   ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  --char-hoff : décalage horizontal depuis le centre de   ║
-   ║                l'échelle (px, positif = droite)          ║
-   ║  --char-voff : décalage vertical depuis 50vh             ║
-   ║                (px, positif = vers le bas)               ║
-   ║  --char-w / --char-h : taille dans :root ci-dessus       ║
-   ╚═══════════════════════════════════════════════════════════╝ */
-:root {
-  --char-hoff: 0px;    /* ← décalage horizontal depuis centre échelle  */
-  --char-voff: 0px;    /* ← décalage vertical depuis 50vh              */
-}
 
+/* ═══════════════════════════════════════════════════════════
+   PERSONNAGE
+   Position : centré sur l'échelle, posé sur le sol.
+   bottom calculé par JS (measureLayout) selon la taille d'écran.
+   ▼ ZONE D'AJUSTEMENT :
+      --char-w / --char-h : taille du personnage
+      CHAR_BOTTOM_OFFSET_DESKTOP dans le JS pour la hauteur
+      --char-hoff : décalage horizontal depuis le centre
+   ═══════════════════════════════════════════════════════════ */
 #character {
   position: fixed;
   left: calc(50% + var(--char-hoff));
-  top:  calc(50vh + var(--char-voff));
-  transform: translate(-50%, -20%);
-  width:  var(--char-w);
+  bottom: var(--ground-h); /* valeur initiale, remplacée par JS */
+  transform: translate(-50%, 0);
+  width: var(--char-w);
   height: var(--char-h);
   z-index: 30;
   pointer-events: none;
 }
-.char-frame {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  display: none;
+
+/* Frames du personnage — une seule visible à la fois via .active */
+.char-frame          { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+.char-frame.active   { display: block; }
+.char-frame img      { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.char-placeholder    { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+
+/* Animations de lévitation (section bio) */
+@keyframes char-bob {
+  0%, 100% { transform: translate(-50%, 0) translateY(0);     }
+  50%       { transform: translate(-50%, 0) translateY(-12px); }
 }
-.char-frame.active { display: block; }
-.char-frame img { width:100%; height:100%; object-fit:contain; object-position:center; }
-.char-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:3rem; }
+@keyframes char-bob-mobile {
+  0%, 100% { transform: translate(0, 0) translateY(0);     }
+  50%       { transform: translate(0, 0) translateY(-12px); }
+}
+#character.char-frozen { animation: char-bob 1.8s ease-in-out infinite; }
 
-#hint { position:absolute; bottom:calc(var(--ground-mid) - 200px); left:50%; transform:translateX(-50%); z-index:60; display:flex; align-items:center; gap:16px; pointer-events:none; transition:opacity 0.4s ease; animation:hint-bounce 1.2s ease-in-out infinite; }
-#hint-label { font-family:"Luckiest Guy",monospace; font-size:2rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(236,194,67,0.75); white-space:nowrap; }
 
-#altitude { position:absolute; top:2.5vh; left:50%; transform:translateX(-50%); font-size:0.56rem; letter-spacing:0.3em; color:rgba(237,233,224,0.2); text-transform:uppercase; z-index:70; pointer-events:none; transition:opacity 0.5s; white-space:nowrap; }
+/* ═══════════════════════════════════════════════════════════
+   HINT "CLIMB TO EXPLORE"
+   ▼ ZONE D'AJUSTEMENT DESKTOP :
+      calc(--ground-mid - 200px) = position verticale
+      change --ground-mid dans :root pour ajuster
+   ═══════════════════════════════════════════════════════════ */
+#hint {
+  position: absolute;
+  bottom: calc(var(--ground-mid) - 200px); /* ← ajuste via --ground-mid */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  animation: hint-bounce 1.2s ease-in-out infinite;
+}
+#hint-label {
+  font-family: "Luckiest Guy", monospace;
+  font-size: 2rem;            /* ← taille du texte desktop */
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(236,194,67,0.75);
+  white-space: nowrap;
+}
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  BOUTON MUTE — ZONE D'AJUSTEMENT MANUEL                  ║
-   ╚═══════════════════════════════════════════════════════════╝ */
+@keyframes hint-bounce {
+  0%, 100% { transform: translateX(-20%) translateY(0);     }
+  50%       { transform: translateX(-20%) translateY(-10px); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LABEL ALTITUDE
+   Affiché en haut au centre (ex: "Ground level", "Clouds"...)
+   ═══════════════════════════════════════════════════════════ */
+#altitude {
+  position: absolute;
+  top: 2.5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.56rem;
+  letter-spacing: 0.3em;
+  color: rgba(237,233,224,0.2);
+  text-transform: uppercase;
+  z-index: 70;
+  pointer-events: none;
+  transition: opacity 0.5s;
+  white-space: nowrap;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   BOUTON MUTE
+   ▼ ZONE D'AJUSTEMENT : top / left pour repositionner
+   ═══════════════════════════════════════════════════════════ */
 #mute-btn {
   position: fixed;
-  top:  50px;
+  top: 50px;
   left: 100px;
   z-index: 500;
-  width:  80px; height: 80px;
+  width: 80px; height: 80px;
   border-radius: 50%;
   background: rgba(124,121,121,0.3);
   backdrop-filter: blur(8px);
   color: var(--fg);
   border: none;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background .2s;
 }
 #mute-btn:hover { background: rgba(129,135,193,0.418); }
-#mute-btn svg { width:50px; height:50px; fill:none; stroke:currentColor; stroke-width:1; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+#mute-btn svg   { width: 50px; height: 50px; fill: none; stroke: currentColor; stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 
-/* Flèche "pump up the volume" — même style que #hint-label */
+/* Flèche "PUMP UP THE VOLUME" à côté du bouton mute */
 #volume-hint {
   position: fixed;
-  /* Aligné verticalement au centre du bouton mute (top:50px, height:80px → centre = 90px) */
-  top:  90px;                           /* ← top_mute(50) + height_mute(80)/2             */
-  transform: translateY(-50%);          /* ← centre le hint sur cette ligne               */
-  left: calc(100px + 80px + 18px);      /* ← left_mute(100) + width_mute(80) + gap(18)   */
+  top: 90px;
+  left: calc(100px + 80px + 18px); /* aligne avec le bord droit du bouton */
+  transform: translateY(-50%);
   z-index: 500;
   display: flex;
   align-items: center;
   gap: 12px;
   pointer-events: none;
-  animation: hint-bounce-h 1.2s ease-in-out infinite; /* bounce horizontal → */
+  animation: hint-bounce-h 1.2s ease-in-out infinite;
   transition: opacity 0.4s ease;
 }
 #volume-hint-label {
@@ -310,61 +483,39 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   color: rgba(236,194,67,0.75);
   white-space: nowrap;
 }
-/* Caché quand le son est activé */
-#volume-hint.sound-on { display: none; }
-/* Bounce horizontal pour la flèche → (distinct du bounce vertical ↑ du hint scroll) */
+#volume-hint.sound-on { display: none; } /* caché une fois le son activé */
+
 @keyframes hint-bounce-h {
-  0%,100% { transform: translateY(-50%) translateX(0);    }
-  50%      { transform: translateY(-50%) translateX(8px); }
+  0%, 100% { transform: translateY(-50%) translateX(0);    }
+  50%       { transform: translateY(-50%) translateX(8px); }
 }
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  SATELLITE VIDEO — ZONE D'AJUSTEMENT                     ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  Un seul PNG : assets/satellite-body.png                 ║
-   ║  Les deux panels sont positionnés PAR-DESSUS en absolu   ║
-   ║                                                           ║
-   ║  ▼ ZONES D'AJUSTEMENT                                    ║
-   ║  --sat-w / --sat-h   → taille du PNG (px)               ║
-   ║  --sat-left-x/y      → coin haut-gauche du panel gauche ║
-   ║  --sat-left-w/h      → taille du panel gauche           ║
-   ║  --sat-right-x/y     → coin haut-gauche du panel droit  ║
-   ║  --sat-right-w/h     → taille du panel droit            ║
-   ╚═══════════════════════════════════════════════════════════╝ */
-:root {
-  --sat-w:       1200px;  /* ← largeur du PNG satellite          */
-  --sat-h:        600px;  /* ← hauteur du PNG satellite          */
 
-  /* Panel gauche (lecteur vidéo) — ajuste pour coller au PNG
-     Hypothèse : panneau gauche occupe ~30% gauche du PNG       */
-  --sat-left-x:   40px;   /* ← depuis bord gauche du PNG        */
-  --sat-left-y:  190px;   /* ← depuis bord haut du PNG          */
-  --sat-left-w:  310px;   /* ← largeur du panel                 */
-  --sat-left-h:  220px;   /* ← hauteur du panel                 */
-
-  /* Panel droit (playlist) — ajuste pour coller au PNG
-     Hypothèse : panneau droit occupe ~30% droit du PNG         */
-  --sat-right-x: 850px;   /* ← depuis bord gauche du PNG        */
-  --sat-right-y: 190px;   /* ← depuis bord haut du PNG          */
-  --sat-right-w: 310px;   /* ← largeur du panel                 */
-  --sat-right-h: 220px;   /* ← hauteur du panel                 */
-}
+/* ═══════════════════════════════════════════════════════════
+   SATELLITE VIDEO (desktop)
+   Un seul PNG avec deux panels superposés :
+   #sat-panel-left  → lecteur YouTube
+   #sat-panel-right → playlist
+   Les satellites mobiles (#sat-wrap-mob-a/b) sont cachés ici
+   et affichés via @media mobile.
+   ▼ ZONE D'AJUSTEMENT : variables --sat-* dans :root
+   ═══════════════════════════════════════════════════════════ */
+#sat-wrap-mob-a,
+#sat-wrap-mob-b { display: none; } /* cachés sur desktop */
 
 #satellite-wrap {
   position: absolute;
-  left: 50%;
-  top:  50%;
+  left: 50%; top: 50%;
   transform: translate(-50%, -50%) scale(0.01);
   transform-origin: center center;
-  z-index: 15;             /* derrière échelle(24) et perso(30) */
-  width:  var(--sat-w);
+  z-index: 15;
+  width: var(--sat-w);
   height: var(--sat-h);
   pointer-events: none;
   will-change: transform, opacity;
   opacity: 0;
 }
 
-/* PNG du satellite en fond */
 #sat-body {
   position: absolute;
   inset: 0;
@@ -374,11 +525,10 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   user-select: none;
 }
 
-/* Panels superposés sur le PNG */
 .sat-panel {
   position: absolute;
   overflow: hidden;
-  background: rgba(8, 16, 32, 0.88);
+  background: rgba(8,16,32,0.88);
   border: 1px solid rgba(100,160,255,0.2);
   display: flex;
   flex-direction: column;
@@ -386,25 +536,11 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
-.sat-panel.panel-ready {
-  opacity: 1;
-  pointer-events: auto;
-}
+.sat-panel.panel-ready { opacity: 1; pointer-events: auto; }
 
-#sat-panel-left {
-  left:   var(--sat-left-x);
-  top:    var(--sat-left-y);
-  width:  var(--sat-left-w);
-  height: var(--sat-left-h);
-}
-#sat-panel-right {
-  left:   var(--sat-right-x);
-  top:    var(--sat-right-y);
-  width:  var(--sat-right-w);
-  height: var(--sat-right-h);
-}
+#sat-panel-left  { left: var(--sat-left-x);  top: var(--sat-left-y);  width: var(--sat-left-w);  height: var(--sat-left-h);  }
+#sat-panel-right { left: var(--sat-right-x); top: var(--sat-right-y); width: var(--sat-right-w); height: var(--sat-right-h); }
 
-/* ▼ ZONE D'AJUSTEMENT — style des panneaux */
 .sat-panel-header {
   padding: 6px 10px 5px;
   font-family: 'Bebas Neue', sans-serif;
@@ -427,6 +563,7 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   border: none;
 }
 
+/* Playlist dans le panel droit */
 #sat-playlist {
   flex: 1;
   overflow-y: auto;
@@ -461,35 +598,21 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   -webkit-box-orient: vertical;
 }
 .sat-playlist-item.active .sat-playlist-title { color: rgba(100,180,255,0.85); }
-/* ▲ FIN SATELLITE ══════════════════════════════════════════ */
 
 
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  SECTION BIO — UFO + TEXTE TYPEWRITER                    ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  PNG recommandé : assets/ufo.png                         ║
-   ║  Taille idéale  : 800 × 600 px                           ║
-   ║    → soucoupe en haut (~200px de hauteur)                ║
-   ║    → faisceau lumineux vers le bas (~400px)              ║
-   ║  Le PNG doit être transparent hors soucoupe/faisceau     ║
-   ║                                                           ║
-   ║  Z-index : 28 → devant échelle(24), derrière perso(30)  ║
-   ╚═══════════════════════════════════════════════════════════╝ */
-
-/* ▼ ZONE D'AJUSTEMENT — taille et position UFO */
-:root {
-  --ufo-w:      1000px;  /* ← largeur du PNG ufo.png                      */
-  --ufo-h:      800px;  /* ← hauteur du PNG ufo.png                      */
-  --ufo-top:     20px;  /* ← distance depuis le haut de l'écran (px)     */
-                        /*   augmente pour descendre, diminue pour monter */
-}
-
+/* ═══════════════════════════════════════════════════════════
+   UFO — SECTION BIO
+   Descend depuis le haut de l'écran.
+   La lévitation CSS est isolée dans #ufo-inner pour
+   ne pas interférer avec le translateY JS du parent.
+   ▼ ZONE D'AJUSTEMENT : --ufo-w / --ufo-h / --ufo-top dans :root
+   ═══════════════════════════════════════════════════════════ */
 #ufo-wrap {
   position: absolute;
   left: 50%;
   top: var(--ufo-top);
-  transform: translateX(-50%);  /* JS overrides this during entry/exit */
-  width:  var(--ufo-w);
+  transform: translateX(-50%); /* JS surcharge ce transform pendant l'animation */
+  width: var(--ufo-w);
   height: var(--ufo-h);
   z-index: 28;
   pointer-events: none;
@@ -497,7 +620,6 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   opacity: 0;
 }
 
-/* Inner reçoit la lévitation CSS — isolé du translateY JS du parent */
 #ufo-inner {
   width: 100%; height: 100%;
   transition: transform 0.3s ease;
@@ -509,37 +631,22 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   display: block;
 }
 
-/* ── Lévitation de l'UFO ──
-   ▼ ZONE D'AJUSTEMENT
-   translateY(-Xpx) : amplitude verticale (px)
-   Xs ease-in-out   : durée d'un cycle complet                */
+/* ▼ ZONE D'AJUSTEMENT : amplitude (-18px) et durée (2.4s) */
 @keyframes ufo-levitate {
-  0%,100% { transform: translateY(0);       }
-  50%     { transform: translateY(-18px);   }
-  /* ← change -18px pour plus ou moins d'amplitude           */
+  0%, 100% { transform: translateY(0);     }
+  50%       { transform: translateY(-18px); }
 }
 #ufo-wrap.ufo-active #ufo-inner {
   animation: ufo-levitate 2.4s ease-in-out infinite;
-  /* ← change 2.4s pour vitesse de lévitation                */
 }
-/* ▲ FIN UFO POSITION ════════════════════════════════════════ */
 
-/* ── Personnage figé : animation bob (lévitation) ──
-   ▼ ZONE D'AJUSTEMENT
-   bob-distance : amplitude verticale en px
-   bob-duration : durée d'un cycle complet                    */
-@keyframes char-bob {
-  0%,100% { transform: translate(-50%, -20%) translateY(0);      }
-  50%     { transform: translate(-50%, -20%) translateY(-12px);  }
-  /* ← change -12px pour plus ou moins d'amplitude             */
-}
-#character.char-frozen {
-  animation: char-bob 1.8s ease-in-out infinite;
-  /* ← change 1.8s pour vitesse de lévitation                 */
-}
-/* ▲ FIN BOB ═════════════════════════════════════════════════ */
 
-/* ── Texte typewriter ── */
+/* ═══════════════════════════════════════════════════════════
+   BIO — TEXTE TYPEWRITER (deux colonnes)
+   Desktop : colonne gauche (align right) + colonne droite (align left)
+   Mobile  : deux blocs empilés (overridés dans @media)
+   ▼ ZONE D'AJUSTEMENT : --bio-col-* dans :root
+   ═══════════════════════════════════════════════════════════ */
 #bio-text-wrap {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -550,57 +657,40 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
 }
 #bio-text-wrap.bio-visible { opacity: 1; }
 
-/* ▼ ZONE D'AJUSTEMENT — colonnes de texte bio
-   Les deux colonnes sont centrées verticalement sur l'écran,
-   et positionnées de part et d'autre du centre horizontal.
-
-   --bio-col-gap  : distance du centre à chaque colonne (px)
-                    0 = collé au centre, augmente pour écarter
-   --bio-col-w    : largeur de chaque colonne (px)
-   --bio-col-top  : position verticale depuis le haut (vh)
-                    50vh = milieu écran, diminue pour monter       */
-:root {
-  --bio-col-gap: 80px;   /* ← écart depuis le centre             */
-  --bio-col-w:  400px;   /* ← largeur de chaque colonne          */
-  --bio-col-top: 35vh;   /* ← position verticale                 */
-}
-
 #bio-col-left {
   position: absolute;
-  top:   var(--bio-col-top);
-  right: calc(50% + var(--bio-col-gap));  /* ← à gauche du centre */
+  top: var(--bio-col-top);
+  right: calc(50% + var(--bio-col-gap)); /* à gauche du centre */
   width: var(--bio-col-w);
-  text-align: right;   /* ← texte aligné vers le centre          */
+  text-align: right;
 }
 #bio-col-right {
   position: absolute;
-  top:   var(--bio-col-top);
-  left:  calc(50% + var(--bio-col-gap));  /* ← à droite du centre */
+  top: var(--bio-col-top);
+  left: calc(50% + var(--bio-col-gap));  /* à droite du centre */
   width: var(--bio-col-w);
-  text-align: left;    /* ← texte aligné vers le centre          */
+  text-align: left;
 }
 
+/* ▼ ZONE D'AJUSTEMENT : taille du texte bio (clamp = dynamique) */
 .bio-col-text {
   font-family: 'Courier New', 'Courier', monospace;
-  font-size: 0.9rem;             /* ← taille du texte            */
-  line-height: 1.8;              /* ← interligne                 */
-  color: rgba(237,233,224,0.85); /* ← couleur                    */
+  font-size: clamp(0.55rem, 1.4vw, 1rem); /* min / fluide / max */
+  line-height: 1.8;
+  color: rgba(237,233,224,0.85);
   white-space: pre-wrap;
 }
-/* ▲ FIN TEXTE BIO ═══════════════════════════════════════════ */
-/* ╔═══════════════════════════════════════════════════════════╗
-   ║  SECTION CONTACT — ÉTOILES RÉSEAUX SOCIAUX              ║
-   ╠═══════════════════════════════════════════════════════════╣
-   ║  PNG étoiles : 120 × 120 px — fond transparent          ║
-   ║  PNG bulles  : 200 × 80 px  — fond transparent          ║
-   ╚═══════════════════════════════════════════════════════════╝ */
 
-/* ▼ ZONE D'AJUSTEMENT — taille des étoiles et bulles */
-:root {
-  --star-size:        80px;  /* ← taille de base de chaque étoile    */
-  --bubble-contact-w: 180px;  /* ← largeur des bulles de description   */
-}
 
+/* ═══════════════════════════════════════════════════════════
+   SECTION CONTACT — ÉTOILES RÉSEAUX SOCIAUX
+   Les étoiles sont positionnées en % de l'écran via JS (CONTACT_STARS).
+   Sur mobile elles sont repositionnées par buildContactStarsMobile().
+   ▼ ZONE D'AJUSTEMENT :
+      --star-size        : taille de base des étoiles
+      --bubble-contact-w : largeur des bulles de description
+      CONTACT_STARS dans le JS pour les positions
+   ═══════════════════════════════════════════════════════════ */
 #contact-stars {
   position: absolute;
   inset: 0;
@@ -608,13 +698,11 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   z-index: 32;
   opacity: 0;
 }
-#contact-stars.contact-visible {
-  opacity: 1;
-}
+#contact-stars.contact-visible { opacity: 1; }
 
 .contact-star {
   position: absolute;
-  width:  var(--star-size);
+  width: var(--star-size);
   height: var(--star-size);
   pointer-events: inherit;
   cursor: pointer;
@@ -630,11 +718,10 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   pointer-events: none;
 }
 
-/* ── Clignotement : grossit lentement, rétrécit rapidement ──
-   ▼ ZONE D'AJUSTEMENT
-   60%  → point max (grossit lentement sur 0→60%)
-   80%  → point min (rétrécit vite sur 60→80%)
-   dur  → via --star-dur en JS (ex: 2.5s à 4s)             */
+/* ▼ ZONE D'AJUSTEMENT : keyframes du pulse
+   0%/100% → petite (scale 0.75)
+   60%     → grande (scale 1.15, grossit lentement)
+   80%     → petite (scale 0.80, rétrécit vite)         */
 @keyframes star-pulse {
   0%   { transform: scale(0.75); }
   60%  { transform: scale(1.15); }
@@ -642,17 +729,14 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   100% { transform: scale(0.75); }
 }
 
-/* Survol : animation coupée, étoile grosse et fixe */
+/* Hover : animation stoppée, étoile grosse et fixe */
 .contact-star:hover {
   animation: none;
   transform: scale(1.6);
   z-index: 10;
 }
-/* ▲ FIN ANIMATION ══════════════════════════════════════════ */
 
-/* ── Bulle de description ──
-   ▼ ZONE D'AJUSTEMENT
-   bottom: gap entre étoile et bulle (augmente pour éloigner)  */
+/* Bulle de description au-dessus de l'étoile */
 .contact-star .star-bubble {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -664,40 +748,222 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
   transition: opacity 0.15s ease, transform 0.18s cubic-bezier(.34,1.56,.64,1);
   transform-origin: bottom center;
 }
-.contact-star .star-bubble img {
-  width: 100%; height: auto; display: block;
-}
+.contact-star .star-bubble img { width: 100%; height: auto; display: block; }
 .contact-star:hover .star-bubble {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
-/* ▲ FIN BULLES CONTACT ══════════════════════════════════════ */
 
-.block.active { pointer-events:auto; }
 
-.sec-label { font-size:0.56rem; letter-spacing:0.34em; color:var(--red); text-transform:uppercase; margin-bottom:0.65rem; opacity:0.85; }
-.sec-title { font-family:"Bebas Neue",sans-serif; font-size:clamp(1.6rem,3vw,2.8rem); letter-spacing:0.04em; line-height:1; margin-bottom:1rem; }
-.stat-list  { display:flex; flex-direction:column; gap:.9rem; margin-top:1rem; }
-.stat-num   { font-family:"Bebas Neue",sans-serif; font-size:2.8rem; line-height:1; color:var(--orange); }
-.stat-label { font-size:.52rem; letter-spacing:.18em; color:#555; text-transform:uppercase; }
-.freq-bars  { display:flex; align-items:flex-end; justify-content:flex-end; gap:3px; height:36px; margin-top:1rem; }
-.freq-bar   { width:3px; background:var(--red); border-radius:2px 2px 0 0; opacity:.55; animation:freq-anim var(--d) ease-in-out infinite alternate; }
-.about-copy { font-size:.76rem; line-height:2; color:rgba(237,233,224,0.4); }
-.about-copy strong { color:rgba(255,26,26,.8); font-weight:normal; }
-.contact-title { font-family:"Bebas Neue",sans-serif; font-size:clamp(2rem,5vw,4rem); letter-spacing:-.01em; line-height:.9; margin-bottom:1.2rem; }
-.contact-title em { color:var(--red); font-style:normal; }
-.link-grid  { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:1.5px; margin-top:.8rem; }
-.ext-link   { padding:.48rem .9rem; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); color:rgba(237,233,224,.4); font-family:"Share Tech Mono",monospace; font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; text-decoration:none; transition:background .2s,color .2s,border-color .2s; }
-.ext-link:hover { background:var(--red); color:#fff; border-color:var(--red); }
-.contact-mail { margin-top:1rem; font-size:.6rem; letter-spacing:.08em; color:rgba(237,233,224,.14); }
+/* ═══════════════════════════════════════════════════════════
+   DIVERS
+   ═══════════════════════════════════════════════════════════ */
+.block.active { pointer-events: auto; }
 
-@keyframes hint-bounce { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(-10px);} }
-@keyframes freq-anim   { from{height:10%} to{height:100%} }
+@keyframes freq-anim { from { height: 10%; } to { height: 100%; } }
 
-@media(max-width:720px){
-  :root { --ground-h:260px; --ground-mid:130px; --ladder-w:140px; --char-w:56px; --char-h:84px; }
-  #hint-label { font-size:1.2rem; }
-  .music-cloud { transform: scale(0.7) !important; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE — max-width: 768px
+   Toutes les règles ci-dessous ne s'appliquent qu'au mobile.
+   Le desktop reste strictement inchangé.
+   ═══════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* ── Bouton play/pause mobile ──
+     ▼ ZONE D'AJUSTEMENT : taille proportionnelle aux nuages
+     Règle : MOB_CLOUD_W * 0.3 ≈ bonne taille
+     Si MOB_CLOUD_W = 42, alors ~13vw est bien proportionné    */
+  .play-btn-img {
+    width:  13vw;   /* ← ajuste selon la taille de tes nuages  */
+    height: 13vw;
+  }
+
+
+  /* ── Variables mobiles ──
+     Toutes en vw/vh pour s'adapter à n'importe quelle taille d'écran.
+     ▼ ZONE D'AJUSTEMENT MOBILE                                       */
+  :root {
+    --ground-h:         50vw;   /* hauteur du sol                    */
+    --ground-mid:       14vw;
+    --ladder-w:         15vw;   /* largeur échelle                   */
+    --char-w:           40vw;   /* largeur personnage                 */
+    --char-h:           50vw;   /* hauteur personnage                 */
+    --char-hoff:        0px;
+    --char-voff:        0px;
+    --ufo-w:            90vw;   /* largeur UFO                        */
+    --ufo-h:            67vw;
+    --ufo-top:          5vw;
+    --star-size:        12vw;   /* taille étoiles contact             */
+    --bubble-w:         20vw;   /* largeur bulle BD                   */
+    --bubble-top:       75vh;
+    --bubble-contact-w: 35vw;   /* largeur bulles description étoiles */
+    --sat-w:            90vw;   /* largeur satellites                 */
+    --sat-h:            50vw;
+    --nl-y:             4vw;    /* position verticale lettres         */
+    --char-mob-nudge:   0vw;    /* affinage horizontal personnage     */
+  }
+
+
+  /* ── Lettres NOISE LADDER mobile ──
+     ▼ ZONE D'AJUSTEMENT :
+        background-size  → largeur du PNG affiché (vw)
+        background-position → X Y (X=gauche/droite, Y=haut/bas) */
+  #noise-letters {
+    background-image:    url('assets/mobile-noise-letters.png') !important;
+    background-size:     70vw auto !important;
+    background-repeat:   no-repeat !important;
+    background-position: 4vw -1vw !important; /* ← ajuste X et Y ici */
+  }
+  #noise-letters.noise-active { animation: none !important; }
+
+
+  /* ── Échelle : à droite ──
+     ▼ ZONE D'AJUSTEMENT : right = distance depuis le bord droit */
+  #ladder {
+    left: auto;
+    right: 1vw;          /* ← ajuste ici */
+    transform: none;
+  }
+
+
+  /* ── Personnage : centré sur l'échelle ──
+     Formule : right_echelle + ladder-w/2 - char-w/2
+     ▼ ZONE D'AJUSTEMENT :
+        --char-mob-nudge dans :root (+ = droite, - = gauche)
+        CHAR_BOTTOM_OFFSET_MOBILE dans le JS pour la hauteur  */
+  #character {
+    left: auto;
+    right: calc(1vw + var(--ladder-w) / 2 - var(--char-w) / 2 - var(--char-mob-nudge, 0vw));
+    transform: translate(0, 0);
+    /* bottom calculé par JS measureLayout */
+  }
+
+
+  /* ── Bulle BD mobile ──
+     ▼ ZONE D'AJUSTEMENT :
+        -50vw = offset vertical (augmente pour monter, diminue pour descendre)
+        right  = distance depuis le bord droit
+        --bubble-w = largeur (défini dans :root mobile)              */
+  #speech-bubble {
+    left:      auto;
+    right:     0vw;
+    transform: none;
+    bottom:    calc(var(--ground-h) + var(--char-h) + -50vw); /* ← ajuste -50vw */
+    width:     var(--bubble-w);
+  }
+
+
+  /* ── Hint "CLIMB TO EXPLORE" mobile ──
+     ▼ ZONE D'AJUSTEMENT :
+        bottom    → hauteur au-dessus du sol (augmente pour monter)
+        translateX dans @keyframes hint-bounce-mobile → décalage horizontal
+          0%   = aligné sur le bord droit du point `right`
+          50%  = centré sur l'échelle
+          100% = décalé à gauche
+        font-size → taille du texte                                  */
+  @keyframes hint-bounce-mobile {
+    0%, 100% { transform: translateX(0%) translateY(0);     }
+    50%       { transform: translateX(0%) translateY(-10px); }
+    /* ← change 50% pour ajuster le centrage horizontal */
+  }
+  #hint {
+    left:      auto;
+    right:     calc(2vw + var(--ladder-w) / 2);
+    bottom:    calc(var(--ground-h) + 4vw);
+    animation: hint-bounce-mobile 1.2s ease-in-out infinite;
+    transform: none;
+  }
+  #hint-label { font-size: 5vw; }
+
+
+  /* ── Hint "CLIMB TO EXPLORE" mobile ──
+     ▼ ZONE D'AJUSTEMENT :
+        bottom    → hauteur au-dessus du sol (augmente pour monter)
+        translateX → centrage horizontal sur l'échelle
+        font-size → taille du texte                                  */
+  #hint {
+    left:      auto;
+    right:     calc(2vw + var(--ladder-w) / 2);
+    bottom:    calc(var(--ground-h) + 20vw); /* ← ajuste pour monter/descendre */
+    transform: translateX(50%);
+  }
+  #hint-label { font-size: 5vw; } /* ← taille du texte mobile */
+
+
+  /* ── Satellite desktop caché — mobiles affichés ── */
+  #satellite-wrap          { display: none !important; }
+  #sat-wrap-mob-a,
+  #sat-wrap-mob-b          { display: block; }
+
+  /* ── Panels des satellites mobiles ──
+     ▼ ZONE D'AJUSTEMENT : left/top/width/height = position sur le PNG */
+  .sat-mob-panel {
+    position: absolute;
+    overflow: hidden;
+    background: rgba(8,16,32,0.88);
+    border: 1px solid rgba(100,160,255,0.2);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    left: 2%; top: 15%; width: 46%; height: 70%; /* ← ajuste selon ton PNG */
+  }
+  .sat-mob-panel.panel-ready { opacity: 1; pointer-events: auto; }
+  .sat-mob-player-wrap { flex: 1; position: relative; background: #000; }
+  .sat-mob-player-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+  #sat-mob-playlist   { flex: 1; overflow-y: auto; scrollbar-width: thin; }
+  .sat-playlist-item  { padding: 3px 5px; }
+  .sat-playlist-thumb { width: 36px; height: 20px; }
+  .sat-playlist-title { font-size: 0.42rem; }
+
+
+  /* ── Bio : colonnes empilées ──
+     ▼ ZONE D'AJUSTEMENT :
+        top   → position verticale (vh)
+        width → largeur (ne doit pas dépasser l'échelle)
+        font-size via clamp : ajuste les 3 valeurs min/fluide/max   */
+  #bio-col-left {
+    right:      auto !important;
+    left:       5vw  !important;
+    top:        20vh;
+    width:      55vw;
+    text-align: right;
+    font-size:  clamp(0.5rem, 2.6vw, 0.85rem);
+    line-height: 1.6;
+  }
+  #bio-col-right {
+    left:       5vw  !important;
+    right:      auto !important;
+    top:        60vh; /* ← en dessous de bio-col-left */
+    width:      55vw;
+    text-align: left;
+    font-size:  clamp(0.5rem, 2.6vw, 0.85rem);
+    line-height: 1.6;
+  }
+
+
+  /* ── UFO centré ── */
+  #ufo-wrap {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+
+  /* ── Personnage figé section bio : animation sans translate(-50%) ── */
+  #character.char-frozen {
+    animation: char-bob-mobile 1.8s ease-in-out infinite;
+  }
+
+
+  /* ── Bouton mute ──
+     ▼ ZONE D'AJUSTEMENT : top/left/width/height */
+  #mute-btn     { top: 10vw;   left: 4vw;  width: 14vw; height: 14vw; }
+  #mute-btn svg { width: 8vw; height: 8vw; }
+  #volume-hint       { top: 17vw; left: 20vw; }
+#volume-hint-label { font-size: 6vw; }
+
 }
 </style>
 </head>
@@ -708,1342 +974,209 @@ html,body { width:100%; overflow-x:hidden; background:#060606; color:var(--fg); 
 <audio id="noise-audio" src="assets/letter-noise.mp3" loop preload="auto"></audio>
 <div id="letters-hitbox"></div>
 <button id="mute-btn" aria-label="Toggle sound"></button>
-<div id="volume-hint">
-  <div id="volume-hint-label">⬅ PUMP UP THE VOLUME</div>
-</div>
-
-
-<!-- Bulle BD — hors de #scene pour éviter overflow:hidden -->
-<div id="speech-bubble">
-  <img id="bubble-img" src="" alt="">
-</div>
+<div id="volume-hint"><div id="volume-hint-label">⬅ PUMP UP THE VOLUME</div></div>
+<div id="speech-bubble"><img id="bubble-img" src="" alt=""></div>
 
 <div id="scene">
   <canvas id="sky-canvas"></canvas>
   <canvas id="stars-canvas"></canvas>
-
   <div id="ground"></div>
   <div id="ladder"></div>
   <div id="noise-letters"></div>
   <div id="ground-fg"></div>
-
-  <!-- UFO section bio -->
-  <div id="ufo-wrap">
-    <div id="ufo-inner">
-      <img id="ufo-img" src="assets/ufo.png" alt="">
-    </div>
-  </div>
-
-  <!-- Texte typewriter bio — deux colonnes -->
+  <div id="ufo-wrap"><div id="ufo-inner"><img id="ufo-img" src="assets/ufo.png" alt=""></div></div>
   <div id="bio-text-wrap">
-    <div class="bio-col" id="bio-col-left">
-      <div class="bio-col-text" id="bio-text-left"></div>
-    </div>
-    <div class="bio-col" id="bio-col-right">
-      <div class="bio-col-text" id="bio-text-right"></div>
-    </div>
+    <div class="bio-col" id="bio-col-left"><div class="bio-col-text" id="bio-text-left"></div></div>
+    <div class="bio-col" id="bio-col-right"><div class="bio-col-text" id="bio-text-right"></div></div>
   </div>
-
-  <!-- Section contact — étoiles réseaux sociaux -->
   <div id="contact-stars"></div>
-
-  <!-- Nuages musicaux — générés par JS -->
-  <div id="clouds-container"></div>
-
-  <!-- ╔══════════════════════════════════════════════════════╗
-       ║  SATELLITE VIDEO                                     ║
-       ║  assets/satellite-body.png → PNG unique du satellite ║
-       ║  Les panels player/playlist sont superposés dessus  ║
-       ╚══════════════════════════════════════════════════════╝ -->
-  <div id="satellite-wrap">
-    <!-- PNG unique du satellite — panneaux dessinés dedans -->
-    <img id="sat-body" src="assets/satellite-body.png" alt="satellite">
-
-    <!-- Panel gauche : YouTube player — positionné sur le panneau gauche du PNG -->
-    <div class="sat-panel" id="sat-panel-left">
-      <div id="sat-player-wrap">
-        <iframe id="sat-iframe"
-          src=""
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen>
-        </iframe>
+  <div id="sat-wrap-mob-a">
+    <img class="sat-mob-body" src="assets/satellite-body.png" alt="">
+    <div class="sat-mob-panel" id="sat-mob-panel-a">
+      <div class="sat-mob-player-wrap">
+        <iframe id="sat-mob-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
-
-    <!-- Panel droit : playlist — positionné sur le panneau droit du PNG -->
-    <div class="sat-panel" id="sat-panel-right">
-      <div id="sat-playlist"></div>
-    </div>
   </div>
-  <!--
-  ╔══════════════════════════════════════════════════════════╗
-  ║  PERSONNAGE — FRAMES PNG                                 ║
-  ╠══════════════════════════════════════════════════════════╣
-  ║  char-sit     → personnage assis (état initial)         ║
-  ║  char-idle    → frame repos quand scroll stoppé         ║
-  ║  char-climb-1 → frame grimpe 1                          ║
-  ║  char-climb-2 → frame grimpe 2                          ║
-  ║  char-climb-3 → frame grimpe 3                          ║
-  ║  char-climb-4 → frame grimpe 4                          ║
-  ║                                                          ║
-  ║  Pour ajouter des frames : dupliquer un div              ║
-  ║  char-climb-N et l'ajouter à CLIMB_FRAMES en JS         ║
-  ╚══════════════════════════════════════════════════════════╝
-  -->
+  <div id="sat-wrap-mob-b">
+    <img class="sat-mob-body" src="assets/satellite-body.png" alt="">
+    <div class="sat-mob-panel" id="sat-mob-panel-b"><div id="sat-mob-playlist"></div></div>
+  </div>
+  <div id="clouds-container"></div>
+  <div id="satellite-wrap">
+    <img id="sat-body" src="assets/satellite-body.png" alt="satellite">
+    <div class="sat-panel" id="sat-panel-left"><div id="sat-player-wrap"><iframe id="sat-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
+    <div class="sat-panel" id="sat-panel-right"><div id="sat-playlist"></div></div>
+  </div>
   <div id="character">
-    <!-- Assis : état de départ -->
-    <div id="char-sit" class="char-frame active">
-      <img src="assets/char-sit.png" alt="">
-      <!-- placeholder si pas de PNG : -->
-      <div class="char-placeholder" style="display:none">&#x1F9CD;</div>
-    </div>
-    <!-- Repos : affiché quand scroll stoppé pendant la montée -->
-    <div id="char-idle" class="char-frame">
-      <img src="assets/char-idle.png" alt="">
-      <div class="char-placeholder" style="display:none">&#x1F9D7;</div>
-    </div>
-    <!-- Frames de grimpe (jouées en boucle pendant le scroll) -->
-    <div id="char-climb-1" class="char-frame">
-      <img src="assets/char-climb-1.png" alt="">
-      <div class="char-placeholder" style="display:none">&#x1F9D7;</div>
-    </div>
-    <div id="char-climb-2" class="char-frame">
-      <img src="assets/char-climb-2.png" alt="">
-      <div class="char-placeholder" style="display:none">&#x1F9D7;</div>
-    </div>
-    <div id="char-climb-3" class="char-frame">
-      <img src="assets/char-climb-3.png" alt="">
-      <div class="char-placeholder" style="display:none">&#x1F9D7;</div>
-    </div>
-    <div id="char-climb-4" class="char-frame">
-      <img src="assets/char-climb-4.png" alt="">
-      <div class="char-placeholder" style="display:none">&#x1F9D7;</div>
-    </div>
+    <div id="char-sit" class="char-frame active"><img src="assets/char-sit.png" alt=""></div>
+    <div id="char-idle" class="char-frame"><img src="assets/char-idle.png" alt=""></div>
+    <div id="char-climb-1" class="char-frame"><img src="assets/char-climb-1.png" alt=""></div>
+    <div id="char-climb-2" class="char-frame"><img src="assets/char-climb-2.png" alt=""></div>
+    <div id="char-climb-3" class="char-frame"><img src="assets/char-climb-3.png" alt=""></div>
+    <div id="char-climb-4" class="char-frame"><img src="assets/char-climb-4.png" alt=""></div>
   </div>
-
   <div id="hint"><div id="hint-label">⬆ CLIMB TO EXPLORE ⬆</div></div>
   <div id="altitude">Ground level</div>
-
-
-  
-  
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 'use strict';
 
-/* ════════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — NUAGES MUSICAUX
-   ════════════════════════════════════════════════════════════
-   Chaque objet dans CLOUD_CONFIG définit un nuage :
-
-   png      → fichier image dans assets/ (doit être unique)
-   mp3      → fichier audio dans assets/
-   name     → nom du morceau affiché dans le lecteur
-   w / h    → dimensions du nuage en px (taille affichée)
-   side     → 'left' ou 'right' (côté de l'échelle)
-   vPos     → position verticale en % du viewport (0=haut, 100=bas)
-   hOff     → décalage horizontal depuis le bord de l'échelle en px
-               (positif = plus loin de l'échelle)
-
-   pIn      → scroll p auquel le nuage commence à arriver
-   pFull    → scroll p auquel le nuage est entièrement en place
-   pFadeOut → scroll p auquel le nuage commence à partir (vers le bas)
-   pOut     → scroll p auquel le nuage est complètement parti
-
-   Pour ajouter un nuage : dupliquer un objet et changer les valeurs.
-   ════════════════════════════════════════════════════════════ */
 var CLOUD_CONFIG = [
-  /* ── Rangée 1 ── */
-  { png:'assets/cloud-1.png',  mp3:'assets/track-01.mp3', name:'MACHINE HATRED',     w:450, h:250, side:'left',  vPos:80, hOff:100, pIn:0.05, pFull:0.11, pFadeOut:0.32, pOut:0.40, z:25  },
-  { png:'assets/cloud-2.png',  mp3:'assets/track-02.mp3', name:'WHITE NOISE RITUAL', w:400, h:250, side:'right', vPos:80, hOff:100, pIn:0.06, pFull:0.12, pFadeOut:0.32, pOut:0.40, z:200 },
-  /* ── Rangée 2 ── */
-  { png:'assets/cloud-3.png',  mp3:'assets/track-03.mp3', name:'FEEDBVCK',           w:400, h:200, side:'left',  vPos:60, hOff:5,   pIn:0.08, pFull:0.14, pFadeOut:0.34, pOut:0.42, z:15  },
-  { png:'assets/cloud-5.png',  mp3:'assets/track-05.mp3', name:'SYSTEM COLLAPSE',    w:400, h:230, side:'right', vPos:60, hOff:1,   pIn:0.09, pFull:0.15, pFadeOut:0.34, pOut:0.42, z:10  },
-  { png:'assets/cloud-4.png',  mp3:'assets/track-04.mp3', name:'SYSTEM COLLAPSE',    w:300, h:170, side:'right', vPos:20, hOff:1,   pIn:0.09, pFull:0.15, pFadeOut:0.34, pOut:0.42, z:10  },
-  { png:'assets/cloud-6.png',  mp3:'assets/track-06.mp3', name:'DRILL & KILL',       w:370, h:200, side:'right', vPos:35, hOff:200, pIn:0.12, pFull:0.18, pFadeOut:0.36, pOut:0.44, z:5   },
-  /* ── Rangée 4 ── */
-  { png:'assets/cloud-7.png',  mp3:'assets/track-07.mp3', name:'STATIC DEATH',       w:310, h:180, side:'left',  vPos:38, hOff:5,   pIn:0.14, pFull:0.20, pFadeOut:0.38, pOut:0.46, z:14  },
-  /* ── Rangée 5 ── */
-  { png:'assets/cloud-9.png',  mp3:'assets/track-09.mp3', name:'ZERO SIGNAL',        w:295, h:168, side:'left',  vPos:25, hOff:200, pIn:0.17, pFull:0.23, pFadeOut:0.40, pOut:0.48, z:21  },
+  { png:'assets/cloud-1.png', mp3:'assets/track-01.mp3', name:'MACHINE HATRED',     w:450, h:250, side:'left',  vPos:80, hOff:100, pIn:0.05, pFull:0.11, pFadeOut:0.32, pOut:0.40, z:25  },
+  { png:'assets/cloud-2.png', mp3:'assets/track-02.mp3', name:'WHITE NOISE RITUAL', w:400, h:250, side:'right', vPos:80, hOff:100, pIn:0.06, pFull:0.12, pFadeOut:0.32, pOut:0.40, z:200 },
+  { png:'assets/cloud-3.png', mp3:'assets/track-03.mp3', name:'FEEDBVCK',           w:400, h:200, side:'left',  vPos:60, hOff:5,   pIn:0.08, pFull:0.14, pFadeOut:0.34, pOut:0.42, z:15  },
+  { png:'assets/cloud-5.png', mp3:'assets/track-05.mp3', name:'SYSTEM COLLAPSE',    w:400, h:230, side:'right', vPos:60, hOff:1,   pIn:0.09, pFull:0.15, pFadeOut:0.34, pOut:0.42, z:10  },
+  { png:'assets/cloud-4.png', mp3:'assets/track-04.mp3', name:'SYSTEM COLLAPSE',    w:300, h:170, side:'right', vPos:20, hOff:1,   pIn:0.09, pFull:0.15, pFadeOut:0.34, pOut:0.42, z:10  },
+  { png:'assets/cloud-6.png', mp3:'assets/track-06.mp3', name:'DRILL & KILL',       w:370, h:200, side:'right', vPos:35, hOff:200, pIn:0.12, pFull:0.18, pFadeOut:0.36, pOut:0.44, z:5   },
+  { png:'assets/cloud-7.png', mp3:'assets/track-07.mp3', name:'STATIC DEATH',       w:310, h:180, side:'left',  vPos:38, hOff:5,   pIn:0.14, pFull:0.20, pFadeOut:0.38, pOut:0.46, z:14  },
+  { png:'assets/cloud-9.png', mp3:'assets/track-09.mp3', name:'ZERO SIGNAL',        w:295, h:168, side:'left',  vPos:25, hOff:200, pIn:0.17, pFull:0.23, pFadeOut:0.40, pOut:0.48, z:21  },
 ];
-/* ▲ FIN ZONE D'AJUSTEMENT NUAGES ═══════════════════════════ */
+var CLOUD_EASE_IN=3, CLOUD_EASE_OUT=2;
 
-/* ════════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — VITESSE ANIMATIONS NUAGES
-   easeSpeed : plus grand = animation plus rapide à l'arrivée
-   ════════════════════════════════════════════════════════════ */
-var CLOUD_EASE_IN  = 3;   /* puissance easeOut à l'arrivée   */
-var CLOUD_EASE_OUT = 2;   /* puissance easeIn à la sortie    */
-/* ▲ FIN ═════════════════════════════════════════════════════ */
-
-// ── SKY ──
-var skyCanvas = document.getElementById('sky-canvas'), skyCtx = skyCanvas.getContext('2d');
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — DÉGRADÉ DU CIEL
-   Chaque ligne : [p, couleur_haut, couleur_milieu, couleur_bas]
-   p va de 0 (sol) à 1 (espace).
-
-   Sections narratives :
-     0.00 → 0.48  Section musique   = bleu ciel jour
-     0.48 → 0.65  Section LIVE      = crépuscule, orange
-     0.65 → 0.85  Section ABOUT     = nuit profonde, bleu-noir
-     0.85 → 1.00  Section CONTACT   = espace noir
-   ════════════════════════════════════════════════════════ */
-var SKY_ZONES = [
-  /* Sol / section musique — ciel bleu jour chaud */
-  [0.00, '#1a4a8e', '#5ba3d9', '#c8a97a'],
-  /* Milieu section musique — toujours bleu, horizon doré */
-  [0.30, '#1a4a8e', '#4a90c4', '#b8955a'],
-  /* Fin section musique (p≈0.35) — encore bleu ciel */
-  [0.35, '#1a3a7e', '#4080b4', '#a07840'],
-  /* Section VIDEO — crépuscule, bleu foncé → orange */
-  [0.40, '#0d2050', '#1a3a6e', '#d4835a'],
-  /* Transition VIDEO → ABOUT — nuit tombante */
-  [0.55, '#060d28', '#0d1e44', '#3a1a0a'],
-  /* Section ABOUT — quasi nuit, bleu-noir profond */
-  [0.80, '#020810', '#060d20', '#0f0808'],
-  /* Section CONTACT — espace noir total */
-  [1.00, '#000000', '#010308', '#020205'],
-];
-/* ▲ FIN ZONE D'AJUSTEMENT DÉGRADÉ ══════════════════════ */
+var skyCanvas=document.getElementById('sky-canvas'), skyCtx=skyCanvas.getContext('2d');
+var SKY_ZONES=[[0.00,'#1a4a8e','#5ba3d9','#c8a97a'],[0.30,'#1a4a8e','#4a90c4','#b8955a'],[0.35,'#1a3a7e','#4080b4','#a07840'],[0.40,'#0d2050','#1a3a6e','#d4835a'],[0.55,'#060d28','#0d1e44','#3a1a0a'],[0.80,'#020810','#060d20','#0f0808'],[1.00,'#000000','#010308','#020205']];
 function lerpColor(a,b,t){var ai=parseInt(a.slice(1),16),bi=parseInt(b.slice(1),16),ar=(ai>>16)&255,ag=(ai>>8)&255,ab=ai&255,br=(bi>>16)&255,bg=(bi>>8)&255,bb=bi&255;return 'rgb('+Math.round(ar+(br-ar)*t)+','+Math.round(ag+(bg-ag)*t)+','+Math.round(ab+(bb-ab)*t)+')';}
 function getSkyColors(p){var z0=SKY_ZONES[0],z1=SKY_ZONES[1];for(var i=0;i<SKY_ZONES.length-1;i++){if(p>=SKY_ZONES[i][0]&&p<=SKY_ZONES[i+1][0]){z0=SKY_ZONES[i];z1=SKY_ZONES[i+1];break;}}var t=(p-z0[0])/(z1[0]-z0[0]||1);return{top:lerpColor(z0[1],z1[1],t),mid:lerpColor(z0[2],z1[2],t),bottom:lerpColor(z0[3],z1[3],t)};}
 function drawSky(p){var W=skyCanvas.width=window.innerWidth,H=skyCanvas.height=window.innerHeight,c=getSkyColors(p),g=skyCtx.createLinearGradient(0,0,0,H);g.addColorStop(0,c.top);g.addColorStop(0.5,c.mid);g.addColorStop(1,c.bottom);skyCtx.fillStyle=g;skyCtx.fillRect(0,0,W,H);if(p<0.5){var so=Math.max(0,(0.5-p)/0.5)*0.6,gh=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-h'))||519,sy=H-gh-20,sg=skyCtx.createRadialGradient(W/2,sy,0,W/2,sy,W*0.3);sg.addColorStop(0,'rgba(255,210,80,'+(so*0.5)+')');sg.addColorStop(0.4,'rgba(255,150,30,'+(so*0.3)+')');sg.addColorStop(1,'transparent');skyCtx.fillStyle=sg;skyCtx.fillRect(0,0,W,H);}}
 
-// ── STARS ──
 var starsCanvas=document.getElementById('stars-canvas'),starsCtx=starsCanvas.getContext('2d'),starsBuilt=false;
 function buildStars(){var W=starsCanvas.width=window.innerWidth,H=starsCanvas.height=window.innerHeight;starsCtx.clearRect(0,0,W,H);var n=Math.floor(W*H/1200);for(var i=0;i<n;i++){var x=Math.random()*W,y=Math.random()*H*0.85,r=Math.random()*1.4+0.3,b=0.4+Math.random()*0.6;starsCtx.beginPath();starsCtx.arc(x,y,r,0,Math.PI*2);starsCtx.fillStyle='rgba(255,255,255,'+b+')';starsCtx.fill();}starsBuilt=true;}
 function updateStars(p){starsCanvas.style.opacity=Math.max(0,Math.min(1,(p-0.45)/0.25));if(!starsBuilt&&p>0.3)buildStars();}
 
-// ── ALTITUDE ──
 var ALT=[[0,'Ground level'],[0.12,'Low altitude'],[0.30,'Clouds'],[0.50,'High altitude'],[0.65,'Stratosphere'],[0.80,'Near space'],[0.92,'Deep space']];
 function updateAltitude(p){var el=document.getElementById('altitude'),lbl=ALT[0][1];for(var i=0;i<ALT.length;i++)if(p>=ALT[i][0])lbl=ALT[i][1];el.textContent=lbl;el.style.opacity=(p<0.05||p>0.97)?0:1;}
 
-// ══════════════════════════════════════════════════════════
-// PERSONNAGE — ANIMATION PILOTÉE PAR LA VITESSE DE SCROLL
-// ══════════════════════════════════════════════════════════
+var CLIMB_FRAMES=['char-climb-1','char-climb-2','char-climb-3','char-climb-4'];
+var PIXELS_PER_FRAME=60, IDLE_DELAY_MS=250, SIT_THRESHOLD=0.02;
+var charFrameIdx=0, charState='sit', idleTimer=null, scrollAccum=0, lastScrollY=window.scrollY;
 
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — ANIMATION PERSONNAGE
-
-   CLIMB_FRAMES    : IDs des frames de grimpe dans l'ordre.
-                     Ajouter/retirer des IDs pour changer
-                     le nombre de frames.
-
-   PIXELS_PER_FRAME: nombre de pixels scrollés nécessaires
-                     pour avancer d'une frame.
-                     Petit = animation rapide (ex: 40)
-                     Grand = animation lente  (ex: 120)
-
-   IDLE_DELAY_MS   : délai sans scroll avant frame repos (ms)
-
-   SIT_THRESHOLD   : p en dessous duquel = assis (bas de page)
-   ════════════════════════════════════════════════════════ */
-var CLIMB_FRAMES     = ['char-climb-1','char-climb-2','char-climb-3','char-climb-4'];
-var PIXELS_PER_FRAME = 60;   /* ← pixels scrollés par frame (↓ = plus rapide) */
-var IDLE_DELAY_MS    = 250;  /* ← délai avant frame repos après arrêt scroll   */
-var SIT_THRESHOLD    = 0.02; /* ← p en dessous duquel = assis                  */
-/* ▲ FIN ZONE D'AJUSTEMENT ═══════════════════════════════ */
-
-var charFrameIdx  = 0;
-var charState     = 'sit';   // 'sit' | 'climb' | 'idle'
-var idleTimer     = null;
-var scrollAccum   = 0;       // pixels accumulés depuis la dernière frame
-var lastScrollY   = window.scrollY;
-
-function showFrame(id) {
-  ['char-sit','char-idle'].concat(CLIMB_FRAMES).forEach(function(fid){
-    var el = document.getElementById(fid);
-    if(el) el.classList.toggle('active', fid === id);
-  });
+function showFrame(id){['char-sit','char-idle'].concat(CLIMB_FRAMES).forEach(function(fid){var el=document.getElementById(fid);if(el)el.classList.toggle('active',fid===id);});}
+function goIdle(){if(charState==='idle')return;charState='idle';scrollAccum=0;showFrame('char-idle');}
+function goSit(){if(charState==='sit')return;charState='sit';clearTimeout(idleTimer);idleTimer=null;charFrameIdx=0;scrollAccum=0;showFrame('char-sit');}
+function updateCharacter(p){
+  if(bioActive)return;
+  if(p<SIT_THRESHOLD){goSit();lastScrollY=window.scrollY;return;}
+  var cy=window.scrollY,delta=Math.abs(cy-lastScrollY);lastScrollY=cy;scrollAccum+=delta;
+  if(scrollAccum>=PIXELS_PER_FRAME){var steps=Math.floor(scrollAccum/PIXELS_PER_FRAME);scrollAccum=scrollAccum%PIXELS_PER_FRAME;charFrameIdx=(charFrameIdx+steps)%CLIMB_FRAMES.length;charState='climb';showFrame(CLIMB_FRAMES[charFrameIdx]);}
+  else if(charState==='sit'){charState='climb';showFrame(CLIMB_FRAMES[charFrameIdx]);}
+  clearTimeout(idleTimer);idleTimer=setTimeout(function(){if(charState==='climb')goIdle();},IDLE_DELAY_MS);
 }
 
-function goIdle() {
-  if(charState === 'idle') return;
-  charState = 'idle';
-  scrollAccum = 0;
-  showFrame('char-idle');
-}
-
-function goSit() {
-  if(charState === 'sit') return;
-  charState = 'sit';
-  clearTimeout(idleTimer); idleTimer = null;
-  charFrameIdx = 0;
-  scrollAccum  = 0;
-  showFrame('char-sit');
-}
-
-function updateCharacter(p) {
-  // Personnage figé pendant la section bio
-  if(bioActive) return;
-
-  if(p < SIT_THRESHOLD){ goSit(); lastScrollY = window.scrollY; return; }
-
-  // Calcule le delta de scroll depuis le dernier appel
-  var currentScrollY = window.scrollY;
-  var delta = Math.abs(currentScrollY - lastScrollY);
-  lastScrollY = currentScrollY;
-
-  // Accumule les pixels scrollés
-  scrollAccum += delta;
-
-  // Avance d'une frame par tranche de PIXELS_PER_FRAME pixels
-  if(scrollAccum >= PIXELS_PER_FRAME) {
-    var steps = Math.floor(scrollAccum / PIXELS_PER_FRAME);
-    scrollAccum = scrollAccum % PIXELS_PER_FRAME;
-    charFrameIdx = (charFrameIdx + steps) % CLIMB_FRAMES.length;
-    charState = 'climb';
-    showFrame(CLIMB_FRAMES[charFrameIdx]);
-  } else if(charState === 'sit') {
-    // Premier pixel scrollé : démarre immédiatement sur frame 1
-    charState = 'climb';
-    showFrame(CLIMB_FRAMES[charFrameIdx]);
-  }
-
-  // Arme le timer de repos
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(function(){
-    if(charState === 'climb') goIdle();
-  }, IDLE_DELAY_MS);
-}
+/* ▼ ZONE D'AJUSTEMENT position personnage
+   positif = monte, negatif = descend */
+var CHAR_BOTTOM_OFFSET_DESKTOP = -150;
+var CHAR_BOTTOM_OFFSET_MOBILE  = 0;
+/* ▲ FIN */
 
 function measureLayout(){
-  /* Position fixée en CSS (50vh) — rien à calculer. */
+  var charEl=document.getElementById('character');
+  if(!charEl)return;
+  var offset=IS_MOBILE?CHAR_BOTTOM_OFFSET_MOBILE:CHAR_BOTTOM_OFFSET_DESKTOP;
+  var groundH=Math.min(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-h'))||519,window.innerHeight*0.35);
+  charEl.style.bottom=(groundH+offset)+'px';
 }
 
-// ── BLOCKS ──
-var BLOCKS=[
-];
+var BLOCKS=[];
 function easeOut(t){return 1-Math.pow(1-t,3);}
-function easeIn(t) {return Math.pow(t,3);}
+function easeIn(t){return Math.pow(t,3);}
 function updateBlocks(p){var vw=window.innerWidth;BLOCKS.forEach(function(b){var el=document.getElementById(b.id);if(!el)return;var off=vw*1.1,tx=0,op=0;if(p<b.pIn){tx=b.dirIn==='left'?-off:off;op=0;}else if(p<=b.pPeak){var t=easeOut((p-b.pIn)/(b.pPeak-b.pIn));tx=(b.dirIn==='left'?-off:off)*(1-t);op=t;}else if(p<b.pFade){tx=0;op=1;}else if(p<=b.pOut){var t2=easeIn((p-b.pFade)/(b.pOut-b.pFade));tx=(b.dirIn==='left'?off:-off)*t2;op=1-t2;}else{tx=b.dirIn==='left'?off:-off;op=0;}el.style.transform='translateX('+tx+'px)';el.style.opacity=op;el.classList.toggle('active',op>0.05);});}
 
-// ── FREQ BARS ──
-function buildFreqBars(){var c=document.getElementById('freq-bars');for(var i=0;i<20;i++){var b=document.createElement('div');b.className='freq-bar';b.style.cssText='--d:'+(0.1+Math.random()*0.35).toFixed(2)+'s;animation-delay:'+(Math.random()*0.2).toFixed(2)+'s;';c.appendChild(b);}}
+var noiseAudio=document.getElementById('noise-audio');
+var SND=(function(){var unlocked=false,muted=false,all=[];function register(el){if(all.indexOf(el)===-1)all.push(el);return el;}function unlock(){if(unlocked)return;unlocked=true;all.forEach(function(el){el.play().then(function(){el.pause();el.currentTime=0;}).catch(function(){});});}function play(el){register(el);if(!unlocked||muted)return;el.play().catch(function(){});}function stop(el){el.pause();el.currentTime=0;}function setMuted(m){muted=m;if(muted)all.forEach(function(el){el.pause();});}function isMuted(){return muted;}function isUnlocked(){return unlocked;}return{register:register,unlock:unlock,play:play,stop:stop,setMuted:setMuted,isMuted:isMuted,isUnlocked:isUnlocked};})();
 
-// ══════════════════════════════════════════════════════════
-// SYSTEME AUDIO GLOBAL SND
-// ══════════════════════════════════════════════════════════
-var noiseAudio = document.getElementById('noise-audio');
-var SND = (function(){
-  var unlocked=false, muted=false, all=[];
-  function register(el){if(all.indexOf(el)===-1)all.push(el);return el;}
-  function unlock(){if(unlocked)return;unlocked=true;all.forEach(function(el){el.play().then(function(){el.pause();el.currentTime=0;}).catch(function(){});});}
-  function play(el){register(el);if(!unlocked||muted)return;el.play().catch(function(){});}
-  function stop(el){el.pause();el.currentTime=0;}
-  function setMuted(m){muted=m;if(muted)all.forEach(function(el){el.pause();});}
-  function isMuted(){return muted;}
-  function isUnlocked(){return unlocked;}
-  return{register:register,unlock:unlock,play:play,stop:stop,setMuted:setMuted,isMuted:isMuted,isUnlocked:isUnlocked};
-})();
+function initMuteBtn(){var btn=document.getElementById('mute-btn');var hint=document.getElementById('volume-hint');var svgOn='<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';var svgOff='<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';btn.innerHTML=svgOff;btn.addEventListener('click',function(){if(!SND.isUnlocked()){SND.unlock();SND.setMuted(false);btn.innerHTML=svgOn;if(hint)hint.classList.add('sound-on');}else{var m=!SND.isMuted();SND.setMuted(m);btn.innerHTML=m?svgOff:svgOn;if(hint)hint.classList.toggle('sound-on',!m);}OSC.sync();});SND.register(noiseAudio);}
 
-function initMuteBtn(){
-  var btn=document.getElementById('mute-btn');
-  var hint=document.getElementById('volume-hint');
-  var svgOn ='<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';
-  var svgOff='<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
-  btn.innerHTML=svgOff;
-  btn.addEventListener('click',function(){
-    if(!SND.isUnlocked()){
-      SND.unlock(); SND.setMuted(false); btn.innerHTML=svgOn;
-      if(hint) hint.classList.add('sound-on');
-    } else {
-      var m=!SND.isMuted(); SND.setMuted(m); btn.innerHTML=m?svgOff:svgOn;
-      if(hint) hint.classList.toggle('sound-on', !m);
-    }
-    OSC.sync();
-  });
-  SND.register(noiseAudio);
-}
+var OSC_FREQ_MIN=55,OSC_FREQ_MAX=1200,OSC_TYPE='sawtooth',OSC_GAIN=0.18,OSC_FADE_MS=80,OSC_STOP_DELAY=120;
+var OSC=(function(){var ctx=null,osc=null,gainNode=null,running=false,stopTimer=null;function getCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();return ctx;}function start(){if(running)return;var ac=getCtx();if(ac.state==='suspended')ac.resume();gainNode=ac.createGain();gainNode.gain.setValueAtTime(0,ac.currentTime);gainNode.gain.linearRampToValueAtTime(OSC_GAIN,ac.currentTime+OSC_FADE_MS/1000);gainNode.connect(ac.destination);osc=ac.createOscillator();osc.type=OSC_TYPE;osc.frequency.setValueAtTime(OSC_FREQ_MIN,ac.currentTime);osc.connect(gainNode);osc.start();running=true;}function stop(){if(!running||!gainNode)return;var ac=getCtx();gainNode.gain.cancelScheduledValues(ac.currentTime);gainNode.gain.setValueAtTime(gainNode.gain.value,ac.currentTime);gainNode.gain.linearRampToValueAtTime(0,ac.currentTime+OSC_FADE_MS/1000);var g=gainNode,o=osc;setTimeout(function(){try{o.stop();o.disconnect();g.disconnect();}catch(e){}},OSC_FADE_MS+20);running=false;osc=null;gainNode=null;}function update(p,scrolling){if(!SND.isUnlocked()||SND.isMuted()){if(running)stop();return;}clearTimeout(stopTimer);if(!scrolling||p<0.01){stopTimer=setTimeout(stop,OSC_STOP_DELAY);return;}if(!running)start();if(running&&gainNode){var ac=getCtx();var freq=OSC_FREQ_MIN*Math.pow(OSC_FREQ_MAX/OSC_FREQ_MIN,p);osc.frequency.setTargetAtTime(freq,ac.currentTime,0.04);}}function sync(){if(SND.isMuted()&&running)stop();}return{update:update,sync:sync};})();
 
-// ══════════════════════════════════════════════════════════
-// OSCILLATEUR DE SCROLL — grave → aigu selon altitude
-// ══════════════════════════════════════════════════════════
+var cloudEls=[];
+function buildClouds(){var container=document.getElementById('clouds-container');container.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:18;';var PLAY_PNG='assets/play-btn-play.png',PAUSE_PNG='assets/play-btn-pause.png';CLOUD_CONFIG.forEach(function(cfg){var el=document.createElement('div');el.className='music-cloud';el.style.cssText='width:'+cfg.w+'px;height:'+cfg.h+'px;cursor:pointer;z-index:'+(cfg.z||18)+';';var inner=document.createElement('div');inner.className='cloud-inner';var bg=document.createElement('img');bg.className='cloud-bg';bg.src=cfg.png;bg.alt='';inner.appendChild(bg);var fill=document.createElement('img');fill.className='cloud-fill';fill.src=cfg.png;fill.alt='';inner.appendChild(fill);el.appendChild(inner);var playBtn=document.createElement('img');playBtn.className='play-btn-img';playBtn.src=PLAY_PNG;playBtn.alt='play';el.appendChild(playBtn);container.appendChild(el);var audio=new Audio(cfg.mp3);audio.preload='metadata';SND.register(audio);var item={el:el,cfg:cfg,audio:audio,fill:fill,playBtn:playBtn,playPng:PLAY_PNG,pausePng:PAUSE_PNG};cloudEls.push(item);el.addEventListener('click',function(e){if(e.target===playBtn)return;if(!audio.duration)return;var rect=el.getBoundingClientRect();audio.currentTime=(e.clientX-rect.left)/rect.width*audio.duration;});playBtn.addEventListener('click',function(e){e.stopPropagation();if(!SND.isUnlocked()||SND.isMuted()){SND.unlock();SND.setMuted(false);var mb=document.getElementById('mute-btn');var svgOn='<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';if(mb)mb.innerHTML=svgOn;}if(!audio.paused){audio.pause();playBtn.src=PLAY_PNG;}else{cloudEls.forEach(function(o){if(o.audio!==audio){o.audio.pause();o.playBtn.src=o.playPng;}});audio.play().catch(function(){});playBtn.src=PAUSE_PNG;}});audio.addEventListener('timeupdate',function(){if(!audio.duration)return;fill.style.clipPath='inset(0 '+(100-audio.currentTime/audio.duration*100)+'% 0 0)';});audio.addEventListener('ended',function(){playBtn.src=PLAY_PNG;fill.style.clipPath='inset(0 100% 0 0)';});});}
 
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — OSCILLATEUR
+var BUBBLE_ZONES=[{pMin:0.00,pMax:0.02,png:'assets/bubble-sit.png'},{pMin:0.02,pMax:0.50,png:'assets/bubble-music.png'},{pMin:0.50,pMax:0.65,png:'assets/bubble-video.png'},{pMin:0.65,pMax:0.80,png:'assets/bubble-bio.png'},{pMin:0.80,pMax:1.00,png:'assets/bubble-contact.png'}];
+var BUBBLE_IDLE_MS=600;
+var bubbleEl=document.getElementById('speech-bubble'),bubbleImg=document.getElementById('bubble-img');
+var bubbleTimer=null,bubbleCurrentP=0,bubbleShown=false;
+function getBubblePng(p){for(var i=0;i<BUBBLE_ZONES.length;i++){var z=BUBBLE_ZONES[i];if(p>=z.pMin&&p<z.pMax)return z.png;}return BUBBLE_ZONES[BUBBLE_ZONES.length-1].png;}
+function showBubble(p){bubbleImg.src=getBubblePng(p);bubbleEl.classList.remove('bubble-hidden','bubble-visible');void bubbleEl.offsetWidth;bubbleEl.classList.add('bubble-visible');bubbleEl.style.opacity='1';bubbleShown=true;}
+function hideBubble(){bubbleEl.classList.remove('bubble-visible');bubbleEl.classList.add('bubble-hidden');bubbleEl.style.opacity='0';bubbleShown=false;}
+function updateBubble(p,scrolling){bubbleCurrentP=p;if(scrolling){clearTimeout(bubbleTimer);if(bubbleShown)hideBubble();return;}clearTimeout(bubbleTimer);bubbleTimer=setTimeout(function(){showBubble(bubbleCurrentP);},BUBBLE_IDLE_MS);}
 
-   OSC_FREQ_MIN   : fréquence au bas de la page (Hz)
-                    graves : 40–120 Hz
-   OSC_FREQ_MAX   : fréquence en haut de la page (Hz)
-                    aigus  : 800–2000 Hz
-   OSC_TYPE       : forme d'onde
-                    'sine'     = son pur, doux
-                    'triangle' = léger, harmonieux
-                    'sawtooth' = rauque, industriel
-                    'square'   = carré, électronique
-   OSC_GAIN       : volume de l'oscillateur (0.0 – 1.0)
-   OSC_FADE_MS    : fondu enchaîné (ms) quand on s'arrête/repart
-   OSC_STOP_DELAY : délai sans scroll avant coupure (ms)
-   ════════════════════════════════════════════════════════ */
-var OSC_FREQ_MIN   = 55;       /* ← fréquence grave (bas de page)  */
-var OSC_FREQ_MAX   = 1200;     /* ← fréquence aiguë (haut de page) */
-var OSC_TYPE       = 'sawtooth'; /* ← 'sine' / 'triangle' / 'sawtooth' / 'square' */
-var OSC_GAIN       = 0.18;     /* ← volume (0.0 = muet, 1.0 = plein) */
-var OSC_FADE_MS    = 80;       /* ← durée du fondu (ms)            */
-var OSC_STOP_DELAY = 120;      /* ← délai avant coupure (ms)       */
-/* ▲ FIN ZONE D'AJUSTEMENT ═══════════════════════════════ */
+var SAT_P_SLIDE_IN=0.28,SAT_P_ROT_IN=0.36,SAT_P_FULL=0.44,SAT_P_ROT_OUT=0.60,SAT_P_SLIDE_OUT=0.68,SAT_P_GONE=0.76;
+var SAT_FRAMES=['assets/sat-left.png','assets/sat-arrive-1.png','assets/sat-arrive-2.png','assets/sat-arrive-3.png','assets/sat-arrive-4.png','assets/satellite-body.png'];
+var SAT_PLAYLIST=[{id:'p61Ol6S1MFk',title:'ICRA#03'},{id:'Fqnx4aSOGGY',title:'ICRA#02'},{id:'9vDohLVVScE',title:'Live in Empty Brain Resort 20'},{id:'sJCsA4dm2II',title:'Live in Yaga Gathering 19'},{id:'VaPSlNfSbrc',title:'Dark freeze'}];
+var satWrap=null,satIframe=null,satPanels=null,satBodyImg=null,satPanelsReady=false;
+function buildSatellite(){satWrap=document.getElementById('satellite-wrap');satIframe=document.getElementById('sat-iframe');satPanels=satWrap.querySelectorAll('.sat-panel');satBodyImg=document.getElementById('sat-body');SAT_FRAMES.forEach(function(src){var img=new Image();img.src=src;});var playlist=document.getElementById('sat-playlist');SAT_PLAYLIST.forEach(function(video,idx){var item=document.createElement('div');item.className='sat-playlist-item'+(idx===0?' active':'');var thumb=document.createElement('img');thumb.className='sat-playlist-thumb';thumb.src='https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';thumb.alt='';var title=document.createElement('div');title.className='sat-playlist-title';title.textContent=video.title;item.appendChild(thumb);item.appendChild(title);playlist.appendChild(item);item.addEventListener('click',function(e){e.stopPropagation();loadSatVideo(idx);});});if(SAT_PLAYLIST.length>0)loadSatVideo(0);}
+function loadSatVideo(idx){if(!SAT_PLAYLIST[idx])return;satIframe.src='https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id+'?autoplay=0&rel=0&modestbranding=1&enablejsapi=1';document.querySelectorAll('.sat-playlist-item').forEach(function(item,i){item.classList.toggle('active',i===idx);});}
+function showSatPanels(visible){if(!satPanels||visible===satPanelsReady)return;satPanelsReady=visible;satPanels.forEach(function(panel){panel.classList.toggle('panel-ready',visible);panel.style.pointerEvents=visible?'auto':'none';});}
+function updateSatellite(p){if(!satWrap)return;var n=SAT_FRAMES.length,tx=0,op=0,fi=0,panels=false,restX=0;if(p<SAT_P_SLIDE_IN){tx=-window.innerWidth*1.4;op=Math.max(0,(p-(SAT_P_SLIDE_IN-0.02))/0.02);fi=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);tx=restX-window.innerWidth*1.4*(1-(1-Math.pow(1-t1,3)));op=Math.min(1,t1*3);fi=0;}else if(p<=SAT_P_FULL){var t2=(p-SAT_P_ROT_IN)/(SAT_P_FULL-SAT_P_ROT_IN);tx=restX;op=1;fi=Math.max(0,Math.min(n-1,Math.round(t2*(n-1))));}else if(p<SAT_P_ROT_OUT){tx=restX;op=1;fi=n-1;panels=true;}else if(p<=SAT_P_SLIDE_OUT){var t3=(p-SAT_P_ROT_OUT)/(SAT_P_SLIDE_OUT-SAT_P_ROT_OUT);tx=restX;op=1;fi=Math.max(0,Math.min(n-1,Math.round((1-t3)*(n-1))));}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_SLIDE_OUT)/(SAT_P_GONE-SAT_P_SLIDE_OUT);tx=restX+window.innerWidth*1.4*Math.pow(t4,2);op=1-t4;fi=0;}else{tx=window.innerWidth*1.4;op=0;fi=0;}if(satBodyImg)satBodyImg.src=SAT_FRAMES[fi];satWrap.style.transform='translate(calc(-50% + '+tx+'px), -50%)';satWrap.style.opacity=String(Math.max(0,Math.min(1,op)));showSatPanels(panels);}
 
-var OSC = (function(){
-  var ctx = null, osc = null, gainNode = null;
-  var running   = false;
-  var stopTimer = null;
+var BIO_P_IN=0.60,BIO_P_FULL=0.68,BIO_P_FADE=0.88,BIO_P_OUT=0.96;
+var BIO_TEXT_LEFT=["After studying Fine Arts in Grenoble","and discovering experimental music,"," I began producing Breakcore","under the alias Antiset,"," performing across the French rave ","and festival scene.","My live sets are a raw blend ","of analog synthesis and curated samples."].join('\n');
+var BIO_TEXT_RIGHT=["In 2010, I moved to Vilnius, Lithuania,"," and rebranded as Noise Ladder,","focusing on modular synthesis,","harsh noise, and drone.","Recently, I've returned to my roots ","in Hardtek and Hardcore,","uniquely infusing them with traditional Jewish music.",].join('\n');
+var BIO_TYPEWRITER_MS=22;
+var ufoWrap=null,bioTextWrap=null,bioTextLeft=null,bioTextRight=null,bioActive=false,bioTyperLeft=null,bioTyperRight=null,bioTyperIdx={l:0,r:0};
+function initBio(){ufoWrap=document.getElementById('ufo-wrap');bioTextWrap=document.getElementById('bio-text-wrap');bioTextLeft=document.getElementById('bio-text-left');bioTextRight=document.getElementById('bio-text-right');}
+function startTypewriter(){if(bioTyperLeft||bioTyperRight)return;bioTyperIdx.l=0;bioTyperIdx.r=0;bioTextLeft.textContent='';bioTextRight.textContent='';function typeLeft(){if(bioTyperIdx.l<BIO_TEXT_LEFT.length){bioTextLeft.textContent+=BIO_TEXT_LEFT[bioTyperIdx.l++];bioTyperLeft=setTimeout(typeLeft,BIO_TYPEWRITER_MS);}else{bioTyperLeft=null;}}function typeRight(){if(bioTyperIdx.r<BIO_TEXT_RIGHT.length){bioTextRight.textContent+=BIO_TEXT_RIGHT[bioTyperIdx.r++];bioTyperRight=setTimeout(typeRight,BIO_TYPEWRITER_MS);}else{bioTyperRight=null;}}typeLeft();typeRight();}
+function stopTypewriter(){clearTimeout(bioTyperLeft);bioTyperLeft=null;clearTimeout(bioTyperRight);bioTyperRight=null;bioTextLeft.textContent='';bioTextRight.textContent='';bioTyperIdx.l=0;bioTyperIdx.r=0;}
+function updateBio(p){if(!ufoWrap)return;var ty=0,op=0,inSection=false;if(p<BIO_P_IN){ty=-window.innerHeight*1.2;op=0;}else if(p<=BIO_P_FULL){var t1=(p-BIO_P_IN)/(BIO_P_FULL-BIO_P_IN);ty=-window.innerHeight*1.2*(1-(1-Math.pow(1-t1,3)));op=Math.min(1,t1*2);}else if(p<BIO_P_FADE){ty=0;op=1;inSection=true;}else if(p<=BIO_P_OUT){var t2=(p-BIO_P_FADE)/(BIO_P_OUT-BIO_P_FADE);ty=-window.innerHeight*1.2*Math.pow(t2,2);op=1-t2;}else{ty=-window.innerHeight*1.2;op=0;}ufoWrap.style.transform='translateX(-50%) translateY('+ty+'px)';ufoWrap.style.opacity=String(Math.max(0,Math.min(1,op)));ufoWrap.classList.toggle('ufo-active',inSection);if(inSection&&!bioActive){bioActive=true;bioTextWrap.classList.add('bio-visible');startTypewriter();document.getElementById('character').classList.add('char-frozen');showFrame('char-idle');}else if(!inSection&&bioActive){bioActive=false;bioTextWrap.classList.remove('bio-visible');stopTypewriter();document.getElementById('character').classList.remove('char-frozen');}}
 
-  function getCtx(){
-    if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    return ctx;
-  }
-
-  function start(){
-    if(running) return;
-    var ac = getCtx();
-    if(ac.state === 'suspended') ac.resume();
-
-    gainNode = ac.createGain();
-    gainNode.gain.setValueAtTime(0, ac.currentTime);
-    gainNode.gain.linearRampToValueAtTime(OSC_GAIN, ac.currentTime + OSC_FADE_MS / 1000);
-    gainNode.connect(ac.destination);
-
-    osc = ac.createOscillator();
-    osc.type = OSC_TYPE;
-    osc.frequency.setValueAtTime(OSC_FREQ_MIN, ac.currentTime);
-    osc.connect(gainNode);
-    osc.start();
-    running = true;
-  }
-
-  function stop(){
-    if(!running || !gainNode) return;
-    var ac = getCtx();
-    gainNode.gain.cancelScheduledValues(ac.currentTime);
-    gainNode.gain.setValueAtTime(gainNode.gain.value, ac.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, ac.currentTime + OSC_FADE_MS / 1000);
-    var g = gainNode, o = osc;
-    setTimeout(function(){
-      try{ o.stop(); o.disconnect(); g.disconnect(); } catch(e){}
-    }, OSC_FADE_MS + 20);
-    running = false; osc = null; gainNode = null;
-  }
-
-  // Appelée à chaque scroll avec p (0=bas, 1=haut) et scrolling=true/false
-  function update(p, scrolling){
-    // Ne joue pas si SND est muet ou pas débloqué
-    if(!SND.isUnlocked() || SND.isMuted()){
-      if(running) stop();
-      return;
-    }
-
-    clearTimeout(stopTimer);
-
-    if(!scrolling || p < 0.01){
-      // Pas de scroll ou tout en bas → silence
-      stopTimer = setTimeout(stop, OSC_STOP_DELAY);
-      return;
-    }
-
-    if(!running) start();
-
-    if(running && gainNode){
-      var ac = getCtx();
-      // Fréquence : interpolation exponentielle grave→aigu
-      // exp donne une progression plus musicale que linéaire
-      var freq = OSC_FREQ_MIN * Math.pow(OSC_FREQ_MAX / OSC_FREQ_MIN, p);
-      osc.frequency.setTargetAtTime(freq, ac.currentTime, 0.04);
-    }
-  }
-
-  // Sync état mute (appelé depuis bouton mute)
-  function sync(){
-    if(SND.isMuted() && running) stop();
-  }
-
-  return { update: update, sync: sync };
-})();
-
-// ══════════════════════════════════════════════════════════
-// NUAGES MUSICAUX
-// ══════════════════════════════════════════════════════════
-var cloudEls = []; // tableau des éléments DOM des nuages
-
-function formatTime(s){
-  s = Math.floor(s||0);
-  return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;
-}
-
-function buildClouds(){
-  var container = document.getElementById('clouds-container');
-  container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:18;';
-
-  /* ════════════════════════════════════════════════════════
-     ▼ ZONE D'AJUSTEMENT — PNG du bouton play/pause
-     Remplace ces src par tes propres PNG.
-     Si tu n'as pas de PNG, un SVG inline est généré en fallback.
-     play-btn-play.png  → état lecture stoppée
-     play-btn-pause.png → état en cours de lecture          */
-  var PLAY_PNG  = 'assets/play-btn-play.png';
-  var PAUSE_PNG = 'assets/play-btn-pause.png';
-  /* ▲ FIN ════════════════════════════════════════════════ */
-
-  CLOUD_CONFIG.forEach(function(cfg){
-
-    // ── Conteneur principal (JS anime son transform/opacity) ──
-    var el = document.createElement('div');
-    el.className = 'music-cloud';
-    el.style.cssText = 'width:'+cfg.w+'px;height:'+cfg.h+'px;cursor:pointer;z-index:'+(cfg.z||18)+';';
-
-    // ── Inner : scale hover CSS isolé ──
-    var inner = document.createElement('div');
-    inner.className = 'cloud-inner';
-
-    // PNG nuage de base
-    var bg = document.createElement('img');
-    bg.className = 'cloud-bg';
-    bg.src = cfg.png;
-    bg.alt = '';
-    inner.appendChild(bg);
-
-    // PNG nuage teinté (progression) — même source, filtre CSS
-    var fill = document.createElement('img');
-    fill.className = 'cloud-fill';
-    fill.src = cfg.png;
-    fill.alt = '';
-    inner.appendChild(fill);
-
-    el.appendChild(inner);
-
-    // ── Bouton play/pause PNG flottant (hors .cloud-inner pour ne pas
-    //    être affecté par le scale hover du nuage) ──
-    var playBtn = document.createElement('img');
-    playBtn.className = 'play-btn-img';
-    playBtn.src = PLAY_PNG;
-    playBtn.alt = 'play';
-    el.appendChild(playBtn);
-
-    container.appendChild(el);
-
-    // ── Audio ──
-    var audio = new Audio(cfg.mp3);
-    audio.preload = 'metadata';
-    SND.register(audio);
-
-    var item = { el:el, cfg:cfg, audio:audio, fill:fill, playBtn:playBtn,
-                 playPng:PLAY_PNG, pausePng:PAUSE_PNG };
-    cloudEls.push(item);
-
-    // ── Clic sur le NUAGE (pas le bouton) : seek ──
-    // Le clic sur le nuage lui-même seek dans le morceau
-    // proportionnellement à la position X du clic dans le nuage.
-    el.addEventListener('click', function(e){
-      // Si on a cliqué sur le bouton play, ne pas seek
-      if(e.target === playBtn) return;
-      if(!audio.duration) return;
-      var rect = el.getBoundingClientRect();
-      var ratio = (e.clientX - rect.left) / rect.width;
-      audio.currentTime = ratio * audio.duration;
-    });
-
-    // ── Clic sur le bouton play ──
-    playBtn.addEventListener('click', function(e){
-      e.stopPropagation();
-
-      // Débloque + active son global automatiquement
-      if(!SND.isUnlocked() || SND.isMuted()){
-        SND.unlock();
-        SND.setMuted(false);
-        var muteBtn = document.getElementById('mute-btn');
-        var svgOn = '<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';
-        if(muteBtn) muteBtn.innerHTML = svgOn;
-      }
-
-      if(!audio.paused){
-        audio.pause();
-        playBtn.src = PLAY_PNG;
-      } else {
-        // Stoppe tous les autres
-        cloudEls.forEach(function(other){
-          if(other.audio !== audio){
-            other.audio.pause();
-            other.playBtn.src = other.playPng;
-          }
-        });
-        audio.play().catch(function(){});
-        playBtn.src = PAUSE_PNG;
-      }
-    });
-
-    // ── Progression : met à jour clip-path du fill ──
-    audio.addEventListener('timeupdate', function(){
-      if(!audio.duration) return;
-      var pct = (audio.currentTime / audio.duration) * 100;
-      // Révèle le fill de gauche à droite :
-      // inset(top  right  bottom  left)
-      // right = 100% → 0% au fur et à mesure
-      fill.style.clipPath = 'inset(0 '+(100-pct)+'% 0 0)';
-    });
-
-    audio.addEventListener('ended', function(){
-      playBtn.src = PLAY_PNG;
-      fill.style.clipPath = 'inset(0 100% 0 0)';
-    });
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-// BULLES BD — BULLE AU-DESSUS DU PERSONNAGE
-// ══════════════════════════════════════════════════════════
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — BULLES PAR SECTION
-
-   Chaque entrée définit une bulle pour une zone de scroll :
-     pMin / pMax : plage de p où cette bulle est active
-     png         : fichier image dans assets/
-
-   Ordre : la première entrée dont p est dans [pMin,pMax]
-   est utilisée. La bulle "sit" (p≈0) s'affiche au démarrage.
-
-   Pour changer une image : modifier le champ png.
-   Pour changer une zone  : modifier pMin / pMax.
-   ════════════════════════════════════════════════════════ */
-var BUBBLE_ZONES = [
-  /* Personnage assis tout en bas */
-  { pMin: 0.00, pMax: 0.02, png: 'assets/bubble-sit.png'     },
-  /* Section musique / nuages */
-  { pMin: 0.02, pMax: 0.50, png: 'assets/bubble-music.png'   },
-  /* Section LIVE */
-  { pMin: 0.50, pMax: 0.65, png: 'assets/bubble-video.png'   },
-  /* Section ABOUT / bio */
-  { pMin: 0.65, pMax: 0.80, png: 'assets/bubble-bio.png'     },
-  /* Section CONTACT */
-  { pMin: 0.80, pMax: 1.00, png: 'assets/bubble-contact.png' },
+var CONTACT_P_IN=0.88,CONTACT_P_OUT=1.00;
+var CONTACT_STARS=[
+  {png:'assets/star-facebook.png',   bubble:'assets/bubble-facebook.png',   url:'https://www.facebook.com/noiseladder',       x:30,y:30, size:0.8, dur:3.2,delay:0.0},
+  {png:'assets/star-youtube.png',    bubble:'assets/bubble-youtube.png',    url:'https://www.youtube.com/@noiseladder',        x:72,y:15, size:1.1, dur:2.8,delay:0.6},
+  {png:'assets/star-instagram.png',  bubble:'assets/bubble-instagram.png',  url:'https://www.instagram.com/noise_ladder',      x:65,y:65, size:1.2, dur:2.5,delay:0.3},
+  {png:'assets/star-mail.png',       bubble:'assets/bubble-mail.png',       url:'mailto:noiseladder@gmail.com',                x:82,y:45, size:1.6, dur:4.0,delay:0.8},
+  {png:'assets/star-soundcloud.png', bubble:'assets/bubble-soundcloud.png', url:'https://soundcloud.com/noiseladder',          x:20,y:78, size:1.5, dur:3.5,delay:1.5},
 ];
-/* ▲ FIN ZONE D'AJUSTEMENT BULLES ════════════════════════ */
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — COMPORTEMENT BULLE
-   BUBBLE_IDLE_MS : délai sans scroll avant d'afficher
-                    la bulle (ms). 0 = immédiat.
-   ════════════════════════════════════════════════════════ */
-var BUBBLE_IDLE_MS = 600;   /* ← délai avant apparition (ms) */
-/* ▲ FIN ════════════════════════════════════════════════ */
-
-var bubbleEl       = document.getElementById('speech-bubble');
-var bubbleImg      = document.getElementById('bubble-img');
-var bubbleTimer    = null;
-var bubbleScrolling = false;
-var bubbleCurrentP  = 0;
-var bubbleShown     = false;
-
-function getBubblePng(p) {
-  for (var i = 0; i < BUBBLE_ZONES.length; i++) {
-    var z = BUBBLE_ZONES[i];
-    if (p >= z.pMin && p < z.pMax) return z.png;
-  }
-  return BUBBLE_ZONES[BUBBLE_ZONES.length - 1].png;
-}
-
-function showBubble(p) {
-  var png = getBubblePng(p);
-  bubbleImg.src = png;
-  bubbleEl.classList.remove('bubble-hidden');
-  // Réactive l'animation en retirant/remettant la classe
-  bubbleEl.classList.remove('bubble-visible');
-  void bubbleEl.offsetWidth; // force reflow pour reset l'animation
-  bubbleEl.classList.add('bubble-visible');
-  bubbleEl.style.opacity = '1';
-  bubbleShown = true;
-}
-
-function hideBubble() {
-  bubbleEl.classList.remove('bubble-visible');
-  bubbleEl.classList.add('bubble-hidden');
-  bubbleEl.style.opacity = '0';
-  bubbleShown = false;
-}
-
-function updateBubble(p, scrolling) {
-  bubbleCurrentP = p;
-
-  if (scrolling) {
-    // Pendant le scroll : cache la bulle immédiatement
-    clearTimeout(bubbleTimer);
-    if (bubbleShown) hideBubble();
-    return;
-  }
-
-  // Scroll stoppé : attend BUBBLE_IDLE_MS puis affiche
-  clearTimeout(bubbleTimer);
-  bubbleTimer = setTimeout(function() {
-    showBubble(bubbleCurrentP);
-  }, BUBBLE_IDLE_MS);
-}
-
-// ══════════════════════════════════════════════════════════
-// SATELLITE VIDEO
-// ══════════════════════════════════════════════════════════
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — TIMING SATELLITE
-
-   Chaque phase est une plage de p (0=sol, 1=espace) :
-
-   SAT_P_SLIDE_IN   → SAT_P_ROT_IN   : sat-left glisse de gauche vers l'échelle
-   SAT_P_ROT_IN     → SAT_P_FULL     : rotation sat-1→sat-4→satellite-body
-   SAT_P_FULL       → SAT_P_ROT_OUT  : satellite-body fixe (panels actifs)
-   SAT_P_ROT_OUT    → SAT_P_SLIDE_OUT: rotation inverse satellite-body→sat-1
-   SAT_P_SLIDE_OUT  → SAT_P_GONE     : sat-left glisse vers la droite
-
-   Pour allonger la section vidéo : écarte SAT_P_FULL et SAT_P_ROT_OUT
-   Pour ralentir la rotation      : écarte les zones _ROT_
-   Pour ralentir le glissement    : écarte les zones _SLIDE_
-   ════════════════════════════════════════════════════════ */
-var SAT_P_SLIDE_IN  = 0.28;  /* ← sat-left entre depuis la gauche       */
-var SAT_P_ROT_IN    = 0.36;  /* ← sat-left arrivé, rotation commence    */
-var SAT_P_FULL      = 0.44;  /* ← satellite-body en place, panels actifs */
-var SAT_P_ROT_OUT   = 0.60;  /* ← rotation inverse commence             */
-var SAT_P_SLIDE_OUT = 0.68;  /* ← sat-left repart vers la droite        */
-var SAT_P_GONE      = 0.76;  /* ← satellite hors écran à droite         */
-/* ▲ FIN ZONE D'AJUSTEMENT ═══════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — FRAMES DE ROTATION
-
-   [0]   = sat-left.png      (profil — glissement)
-   [1..] = frames de rotation intermédiaires
-   [n-1] = satellite-body.png (toujours en dernier)
-
-   Ajoute des frames entre [1] et [n-2] pour plus de fluidité.
-   ════════════════════════════════════════════════════════ */
-var SAT_FRAMES = [
-  'assets/sat-left.png',
-  'assets/sat-arrive-1.png',
-  'assets/sat-arrive-2.png',
-  'assets/sat-arrive-3.png',
-  'assets/sat-arrive-4.png',
-  'assets/satellite-body.png',
-];
-/* ▲ FIN ZONE D'AJUSTEMENT ═══════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — PLAYLIST YOUTUBE
-   ════════════════════════════════════════════════════════ */
-var SAT_PLAYLIST = [
-  { id: 'p61Ol6S1MFk', title: 'ICRA#03' },
-  { id: 'Fqnx4aSOGGY', title: 'ICRA#02' },
-  { id: '9vDohLVVScE', title: 'Live in Empty Brain Resort 20' },
-  { id: 'sJCsA4dm2II', title: 'Live in Yaga Gathering 19' },
-  { id: 'VaPSlNfSbrc', title: 'Dark freeze' },
-];
-/* ▲ FIN ZONE D'AJUSTEMENT PLAYLIST ══════════════════════ */
-
-var satWrap        = null;
-var satIframe      = null;
-var satPanels      = null;
-var satBodyImg     = null;
-var satPanelsReady = false;
-
-function buildSatellite() {
-  satWrap    = document.getElementById('satellite-wrap');
-  satIframe  = document.getElementById('sat-iframe');
-  satPanels  = satWrap.querySelectorAll('.sat-panel');
-  satBodyImg = document.getElementById('sat-body');
-  SAT_FRAMES.forEach(function(src){ var img=new Image(); img.src=src; });
-
-  var playlist = document.getElementById('sat-playlist');
-  SAT_PLAYLIST.forEach(function(video, idx) {
-    var item  = document.createElement('div');
-    item.className = 'sat-playlist-item'+(idx===0?' active':'');
-    var thumb = document.createElement('img');
-    thumb.className = 'sat-playlist-thumb';
-    thumb.src = 'https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';
-    thumb.alt = '';
-    var title = document.createElement('div');
-    title.className = 'sat-playlist-title';
-    title.textContent = video.title;
-    item.appendChild(thumb); item.appendChild(title); playlist.appendChild(item);
-    item.addEventListener('click', function(e){ e.stopPropagation(); loadSatVideo(idx); });
-  });
-  if(SAT_PLAYLIST.length>0) loadSatVideo(0);
-}
-
-function loadSatVideo(idx) {
-  if(!SAT_PLAYLIST[idx]) return;
-  satIframe.src = 'https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id
-    +'?autoplay=0&rel=0&modestbranding=1&enablejsapi=1';
-  document.querySelectorAll('.sat-playlist-item').forEach(function(item,i){
-    item.classList.toggle('active', i===idx);
-  });
-}
-
-function showSatPanels(visible) {
-  if(!satPanels || visible===satPanelsReady) return;
-  satPanelsReady = visible;
-  satPanels.forEach(function(panel){
-    panel.classList.toggle('panel-ready', visible);
-    panel.style.pointerEvents = visible ? 'auto' : 'none';
-  });
-}
-
-/* ════════════════════════════════════════════════════════
-   updateSatellite(p) — 100% piloté par p, aucun timer.
-
-   MONTÉE (p croît) :
-   [< SLIDE_IN]           hors écran gauche, sat-left
-   [SLIDE_IN → ROT_IN]    sat-left glisse de gauche → près de l'échelle
-   [ROT_IN   → FULL]      rotation sat-left→sat-1→…→satellite-body, fixe X
-   [FULL     → ROT_OUT]   satellite-body fixe, panels actifs
-   [ROT_OUT  → SLIDE_OUT] rotation inverse satellite-body→…→sat-1→sat-left, fixe X
-   [SLIDE_OUT→ GONE]      sat-left glisse vers la droite
-   [> GONE]               hors écran droite, sat-left
-
-   DESCENTE (p décroît) : symétrique automatique car tout = f(p)
-   ════════════════════════════════════════════════════════ */
-function updateSatellite(p) {
-  if(!satWrap) return;
-
-  var n  = SAT_FRAMES.length;
-  var tx = 0;
-  var op = 0;
-  var fi = 0;        // frame index
-  var panels = false;
-
-  /* ── Position horizontale de repos (rotation) ──
-     Pendant les phases de rotation et statique, le satellite
-     est centré à x=0. On peut décaler avec satRestX si besoin. */
-  var restX = 0; /* ← ajuste pour décaler la position au repos (px) */
-
-  if(p < SAT_P_SLIDE_IN) {
-    /* Hors écran gauche */
-    tx = -window.innerWidth * 1.4;
-    op = Math.max(0, (p - (SAT_P_SLIDE_IN - 0.02)) / 0.02); // fade-in léger
-    fi = 0;
-
-  } else if(p <= SAT_P_ROT_IN) {
-    /* Glissement gauche → position de rotation */
-    var t1 = (p - SAT_P_SLIDE_IN) / (SAT_P_ROT_IN - SAT_P_SLIDE_IN);
-    var e1 = 1 - Math.pow(1 - t1, 3); // easeOut
-    tx = restX - window.innerWidth * 1.4 * (1 - e1);
-    op = Math.min(1, t1 * 3);
-    fi = 0; // sat-left pendant tout le glissement
-
-  } else if(p <= SAT_P_FULL) {
-    /* Rotation sat-left → satellite-body, satellite fixe */
-    var t2 = (p - SAT_P_ROT_IN) / (SAT_P_FULL - SAT_P_ROT_IN);
-    tx = restX;
-    op = 1;
-    fi = Math.round(t2 * (n - 1));
-    fi = Math.max(0, Math.min(n-1, fi));
-
-  } else if(p < SAT_P_ROT_OUT) {
-    /* Satellite-body fixe, panels actifs */
-    tx = restX;
-    op = 1;
-    fi = n - 1;
-    panels = true;
-
-  } else if(p <= SAT_P_SLIDE_OUT) {
-    /* Rotation inverse satellite-body → sat-left, satellite fixe */
-    var t3 = (p - SAT_P_ROT_OUT) / (SAT_P_SLIDE_OUT - SAT_P_ROT_OUT);
-    tx = restX;
-    op = 1;
-    fi = Math.round((1 - t3) * (n - 1));
-    fi = Math.max(0, Math.min(n-1, fi));
-
-  } else if(p <= SAT_P_GONE) {
-    /* Glissement vers la droite */
-    var t4 = (p - SAT_P_SLIDE_OUT) / (SAT_P_GONE - SAT_P_SLIDE_OUT);
-    var e4 = Math.pow(t4, 2); // easeIn
-    tx = restX + window.innerWidth * 1.4 * e4;
-    op = 1 - t4;
-    fi = 0; // sat-left pendant tout le glissement sortie
-
-  } else {
-    /* Hors écran droite */
-    tx = window.innerWidth * 1.4;
-    op = 0;
-    fi = 0;
-  }
-
-  if(satBodyImg) satBodyImg.src = SAT_FRAMES[fi];
-  satWrap.style.transform = 'translate(calc(-50% + '+tx+'px), -50%)';
-  satWrap.style.opacity   = String(Math.max(0, Math.min(1, op)));
-  showSatPanels(panels);
-}
-
-// ══════════════════════════════════════════════════════════
-// SECTION BIO — UFO + TEXTE TYPEWRITER + PERSO FIGÉ
-// ══════════════════════════════════════════════════════════
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — TIMING SECTION BIO
-
-   BIO_P_IN     : p auquel l'UFO commence à descendre
-   BIO_P_FULL   : p auquel l'UFO est en place, texte commence
-   BIO_P_FADE   : p auquel l'UFO remonte, texte disparaît
-   BIO_P_OUT    : p auquel l'UFO a disparu
-
-   Pour allonger la section : écarte BIO_P_FULL et BIO_P_FADE
-   ════════════════════════════════════════════════════════ */
-var BIO_P_IN   = 0.60;  /* ← UFO commence à descendre         */
-var BIO_P_FULL = 0.68;  /* ← UFO en place, perso figé         */
-var BIO_P_FADE = 0.88;  /* ← UFO remonte, perso libéré        */
-var BIO_P_OUT  = 0.96;  /* ← UFO hors écran                   */
-/* ▲ FIN ZONE D'AJUSTEMENT TIMING ════════════════════════ */
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — TEXTE BIO TYPEWRITER
-
-   Deux colonnes : gauche et droite.
-   Utilise \n pour les sauts de ligne.
-
-   BIO_TYPEWRITER_MS : délai entre chaque caractère (ms)
-                       10 = très rapide / 40 = lent
-   ════════════════════════════════════════════════════════ */
-var BIO_TEXT_LEFT = [
-  "After studying Fine Arts in Grenoble",
-  "and discovering experimental music,",
-  " I began producing Breakcore",
-  "under the alias Antiset,",
-  " performing across the French rave ",
-  "and festival scene.",
-  "My live sets are a raw blend ",
-  "of analog synthesis and curated samples."
-].join('\n');
-
-var BIO_TEXT_RIGHT = [
-  "In 2010, I moved to Vilnius, Lithuania,",
-  " and rebranded as Noise Ladder,",
-  "focusing on modular synthesis,",
-  "harsh noise, and drone.",
-  "Recently, I've returned to my roots ",
-  "in Hardtek and Hardcore,",
-  "uniquely infusing them with traditional Jewish music.",
-].join('\n');
-
-var BIO_TYPEWRITER_MS = 22; /* ← ms par caractère             */
-/* ▲ FIN ZONE D'AJUSTEMENT TEXTE ═════════════════════════ */
-
-var ufoWrap       = null;
-var bioTextWrap   = null;
-var bioTextLeft   = null;
-var bioTextRight  = null;
-var bioActive     = false;
-var bioTyperLeft  = null; // timer typewriter gauche
-var bioTyperRight = null; // timer typewriter droite
-var bioTyperIdx   = { l: 0, r: 0 };
-
-function initBio() {
-  ufoWrap      = document.getElementById('ufo-wrap');
-  bioTextWrap  = document.getElementById('bio-text-wrap');
-  bioTextLeft  = document.getElementById('bio-text-left');
-  bioTextRight = document.getElementById('bio-text-right');
-}
-
-function startTypewriter() {
-  if(bioTyperLeft || bioTyperRight) return; // déjà en cours
-  bioTyperIdx.l = 0;
-  bioTyperIdx.r = 0;
-  bioTextLeft.textContent  = '';
-  bioTextRight.textContent = '';
-
-  function typeLeft() {
-    if(bioTyperIdx.l < BIO_TEXT_LEFT.length) {
-      bioTextLeft.textContent += BIO_TEXT_LEFT[bioTyperIdx.l++];
-      bioTyperLeft = setTimeout(typeLeft, BIO_TYPEWRITER_MS);
-    } else { bioTyperLeft = null; }
-  }
-  function typeRight() {
-    if(bioTyperIdx.r < BIO_TEXT_RIGHT.length) {
-      bioTextRight.textContent += BIO_TEXT_RIGHT[bioTyperIdx.r++];
-      bioTyperRight = setTimeout(typeRight, BIO_TYPEWRITER_MS);
-    } else { bioTyperRight = null; }
-  }
-  typeLeft();
-  typeRight();
-}
-
-function stopTypewriter() {
-  clearTimeout(bioTyperLeft);  bioTyperLeft  = null;
-  clearTimeout(bioTyperRight); bioTyperRight = null;
-  bioTextLeft.textContent  = '';
-  bioTextRight.textContent = '';
-  bioTyperIdx.l = 0;
-  bioTyperIdx.r = 0;
-}
-
-function updateBio(p) {
-  if(!ufoWrap) return;
-
-  var ty = 0;  // translateY de l'UFO (descend depuis le haut)
-  var op = 0;
-  var inSection = false;
-
-  if(p < BIO_P_IN) {
-    /* UFO au-dessus de l'écran */
-    ty = -window.innerHeight * 1.2;
-    op = 0;
-
-  } else if(p <= BIO_P_FULL) {
-    /* Descend depuis le haut */
-    var t1 = (p - BIO_P_IN) / (BIO_P_FULL - BIO_P_IN);
-    var e1 = 1 - Math.pow(1 - t1, 3); // easeOut
-    ty = -window.innerHeight * 1.2 * (1 - e1);
-    op = Math.min(1, t1 * 2);
-
-  } else if(p < BIO_P_FADE) {
-    /* En place */
-    ty = 0;
-    op = 1;
-    inSection = true;
-
-  } else if(p <= BIO_P_OUT) {
-    /* Remonte */
-    var t2 = (p - BIO_P_FADE) / (BIO_P_OUT - BIO_P_FADE);
-    ty = -window.innerHeight * 1.2 * Math.pow(t2, 2);
-    op = 1 - t2;
-
-  } else {
-    ty = -window.innerHeight * 1.2;
-    op = 0;
-  }
-
-  ufoWrap.style.transform = 'translateX(-50%) translateY(' + ty + 'px)';
-  ufoWrap.style.opacity   = String(Math.max(0, Math.min(1, op)));
-  ufoWrap.classList.toggle('ufo-active', inSection);
-
-  // Texte + perso figé
-  if(inSection && !bioActive) {
-    bioActive = true;
-    bioTextWrap.classList.add('bio-visible');
-    startTypewriter();
-    // Fige le personnage sur char-frozen.png
-    document.getElementById('character').classList.add('char-frozen');
-    showFrame('char-idle'); // utilise char-idle comme frame figée
-                            // (remplace par char-frozen si tu as ce PNG)
-  } else if(!inSection && bioActive) {
-    bioActive = false;
-    bioTextWrap.classList.remove('bio-visible');
-    stopTypewriter();
-    // Libère le personnage
-    document.getElementById('character').classList.remove('char-frozen');
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-// SECTION CONTACT — ÉTOILES RÉSEAUX SOCIAUX
-// ══════════════════════════════════════════════════════════
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — TIMING SECTION CONTACT
-
-   CONTACT_P_IN  : p auquel les étoiles apparaissent
-   CONTACT_P_OUT : p auquel elles disparaissent (fin de page)
-   ════════════════════════════════════════════════════════ */
-var CONTACT_P_IN  = 0.88;  /* ← quand les étoiles apparaissent  */
-var CONTACT_P_OUT = 1.00;
-/* ▲ FIN ════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════
-   ▼ ZONE D'AJUSTEMENT — ÉTOILES
-
-   Chaque étoile : {
-     png    : image de l'étoile (assets/star-XXX.png)
-     bubble : image de la bulle (assets/bubble-XXX.png)
-     url    : lien cliquable
-     x      : position horizontale en % de l'écran (0–100)
-     y      : position verticale  en % de l'écran (0–100)
-     size   : taille relative (1 = --star-size, 1.3 = 30% plus grand)
-     dur    : durée du cycle de clignotement (secondes)
-     delay  : décalage de départ (secondes)
-   }
-
-   PNG étoiles recommandé : 120 × 120 px
-   PNG bulles recommandé  : 200 × 80 px
-   ════════════════════════════════════════════════════════ */
-var CONTACT_STARS = [
-  {
-    png:   'assets/star-facebook.png',
-    bubble:'assets/bubble-facebook.png',
-    url:   'https://www.facebook.com/noiseladder',
-    x: 30, y: 30,           /* ← position % écran (0=gauche/haut, 100=droite/bas) */
-    size: 0.8,              /* ← taille relative (1 = --star-size)                */
-    dur: 3.2, delay: 0.0,   /* ← durée cycle (s) / délai départ (s)              */
-  },
-  {
-    png:   'assets/star-youtube.png',
-    bubble:'assets/bubble-youtube.png',
-    url:   'https://www.youtube.com/@noiseladder',
-    x: 72, y: 15,
-    size: 1.1,
-    dur: 2.8, delay: 0.6,
-  },
-  {
-    png:   'assets/star-instagram.png',
-    bubble:'assets/bubble-instagram.png',
-    url:   'https://www.instagram.com/noise_ladder',
-    x: 65, y: 65,
-    size: 1.2,
-    dur: 2.5, delay: 0.3,
-  },
-  {
-    png:   'assets/star-mail.png',
-    bubble:'assets/bubble-mail.png',
-    url:   'mailto:noiseladder@gmail.com',
-    x: 82, y: 45,
-    size: 1.6,
-    dur: 4.0, delay: 0.8,
-  },
-  {
-    png:   'assets/star-soundcloud.png',
-    bubble:'assets/bubble-soundcloud.png',
-    url:   'https://soundcloud.com/noiseladder',
-    x: 20, y: 78,
-    size: 1.5,
-    dur: 3.5, delay: 1.5,
-  },
-];
-/* ▲ FIN ZONE D'AJUSTEMENT ÉTOILES ═══════════════════════ */
-
-var contactWrap    = null;
-var contactBuilt   = false;
-var contactVisible = false;
-
-function buildContactStars() {
-  contactWrap = document.getElementById('contact-stars');
-
-  CONTACT_STARS.forEach(function(cfg) {
-    var star = document.createElement('div');
-    star.className = 'contact-star';
-
-    /* Position et taille via style inline */
-    var sizePx = 'calc(var(--star-size) * ' + cfg.size + ')';
-    star.style.cssText = [
-      'left:'  + cfg.x + '%;',
-      'top:'   + cfg.y + '%;',
-      'width:' + sizePx + ';',
-      'height:'+ sizePx + ';',
-      '--star-dur:'  + cfg.dur   + 's;',
-      '--star-delay:'+ cfg.delay + 's;',
-      'margin-left: calc(' + sizePx + ' / -2);',  /* centre sur le point */
-      'margin-top:  calc(' + sizePx + ' / -2);',
-    ].join('');
-
-    /* Image étoile — SVG fallback si PNG manquant */
-    var img = document.createElement('img');
-    img.className = 'star-img';
-    img.src = cfg.png;
-    img.alt = '';
-    img.onerror = function() {
-      /* Fallback SVG étoile colorée si le PNG n'existe pas */
-      this.onerror = null;
-      this.src = 'data:image/svg+xml,' + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
-        '<polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" ' +
-        'fill="#ede9e0" stroke="#ff6600" stroke-width="2"/></svg>'
-      );
-    };
-    star.appendChild(img);
-
-    /* Bulle description */
-    var bubble = document.createElement('div');
-    bubble.className = 'star-bubble';
-    var bImg = document.createElement('img');
-    bImg.src = cfg.bubble;
-    bImg.alt = '';
-    bubble.appendChild(bImg);
-    star.appendChild(bubble);
-
-    /* Lien */
-    star.addEventListener('click', function() {
-      window.open(cfg.url, '_blank');
-    });
-
-    contactWrap.appendChild(star);
-  });
-
-  contactBuilt = true;
-}
-
-function updateContact(p) {
-  if(!contactWrap) contactWrap = document.getElementById('contact-stars');
-  if(!contactWrap) return;
-  if(!contactBuilt) buildContactStars();
-
-  if(p >= CONTACT_P_IN) {
-    var op = Math.min(1, (p - CONTACT_P_IN) / 0.04);
-    contactWrap.style.opacity = op;
-    // Active pointer-events seulement quand vraiment visible
-    contactWrap.style.pointerEvents = op > 0.05 ? 'auto' : 'none';
-    if(!contactVisible) {
-      contactVisible = true;
-      contactWrap.classList.add('contact-visible');
-    }
-  } else {
-    contactWrap.style.opacity = 0;
-    contactWrap.style.pointerEvents = 'none'; // désactive immédiatement
-    if(contactVisible) {
-      contactVisible = false;
-      contactWrap.classList.remove('contact-visible');
-    }
-  }
-}
-
-function updateClouds(p){
-  var vw = window.innerWidth;
-  var vh = window.innerHeight;
-  // Centre de l'échelle en px depuis la gauche
-  var ladderCx = vw / 2;
-  var ladderHW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ladder-w'))||240;
-  ladderHW = ladderHW / 2;
-
-  cloudEls.forEach(function(item){
-    var cfg = item.cfg;
-    var el  = item.el;
-
-    // ── Position finale (au repos) ──
-    var finalX, finalY;
-    finalY = vh * (cfg.vPos / 100) - cfg.h / 2;
-
-    if(cfg.side === 'left'){
-      // Bord droit du nuage = bord gauche de l'échelle - hOff
-      finalX = ladderCx - ladderHW - cfg.hOff - cfg.w;
-    } else {
-      // Bord gauche du nuage = bord droit de l'échelle + hOff
-      finalX = ladderCx + ladderHW + cfg.hOff;
-    }
-
-    var tx = 0, ty = 0, op = 0;
-
-    if(p < cfg.pIn){
-      // En attente hors écran à droite
-      tx = vw + cfg.w;
-      ty = 0;
-      op = 0;
-
-    } else if(p <= cfg.pFull){
-      // Arrive depuis la droite → position finale
-      var t = 1 - Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn), CLOUD_EASE_IN);
-      tx = (vw + cfg.w) * (1 - t);
-      ty = 0;
-      op = t;
-
-    } else if(p < cfg.pFadeOut){
-      // En place, visible
-      tx = 0;
-      ty = 0;
-      op = 1;
-
-    } else if(p <= cfg.pOut){
-      // Part vers la gauche
-      var t2 = Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut), CLOUD_EASE_OUT);
-      tx = -t2 * (vw + cfg.w); // ← glisse vers la gauche
-      ty = 0;
-      op = 1 - t2;
-
-    } else {
-      // Parti
-      tx = -(vw + cfg.w);
-      ty = 0;
-      op = 0;
-    }
-
-    el.style.left      = finalX + 'px';
-    el.style.top       = finalY + 'px';
-    el.style.transform = 'translate('+tx+'px,'+ty+'px)';
-    el.style.opacity   = op;
-    el.style.pointerEvents = op > 0.1 ? 'auto' : 'none';
-  });
-}
-
-// ── HITBOX NOISE LETTERS ──
-var NL_W=1073, NL_H=151, currentTY=0;
-var hitbox = document.getElementById('letters-hitbox');
-
-function positionHitbox(){
-  var st=getComputedStyle(document.documentElement);
-  var nlX=st.getPropertyValue('--nl-x').trim();
-  var nlY=parseFloat(st.getPropertyValue('--nl-y'))||170;
-  var gh=parseFloat(st.getPropertyValue('--ground-h'))||519;
-  var vw=window.innerWidth, vh=window.innerHeight;
-  var left;
-  if(nlX==='center')           left=(vw-NL_W)/2;
-  else if(nlX.indexOf('%')>-1) left=parseFloat(nlX)/100*vw-NL_W/2;
-  else                         left=parseFloat(nlX);
-  hitbox.style.left  =Math.round(left)+'px';
-  hitbox.style.top   =Math.round((vh-gh)+nlY+currentTY)+'px';
-  hitbox.style.width =NL_W+'px';
-  hitbox.style.height=NL_H+'px';
-}
-
-function initNoiseHover(){
-  var noiseEl=document.getElementById('noise-letters');
-  hitbox.addEventListener('mouseenter',function(){noiseEl.classList.add('noise-active');SND.play(noiseAudio);});
-  hitbox.addEventListener('mouseleave',function(){noiseEl.classList.remove('noise-active');SND.stop(noiseAudio);});
-}
-
-// ── LADDER ──
-var TILE_H=200, SM=8;
+var contactWrap=null,contactBuilt=false,contactVisible=false;
+function buildContactStars(){contactWrap=document.getElementById('contact-stars');CONTACT_STARS.forEach(function(cfg){var star=document.createElement('div');star.className='contact-star';var sizePx='calc(var(--star-size) * '+cfg.size+')';star.style.cssText=['left:'+cfg.x+'%;','top:'+cfg.y+'%;','width:'+sizePx+';','height:'+sizePx+';','--star-dur:'+cfg.dur+'s;','--star-delay:'+cfg.delay+'s;','margin-left: calc('+sizePx+' / -2);','margin-top:  calc('+sizePx+' / -2);'].join('');var img=document.createElement('img');img.className='star-img';img.src=cfg.png;img.alt='';img.onerror=function(){this.onerror=null;this.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="#ede9e0" stroke="#ff6600" stroke-width="2"/></svg>');};star.appendChild(img);var bubble=document.createElement('div');bubble.className='star-bubble';var bImg=document.createElement('img');bImg.src=cfg.bubble;bImg.alt='';bubble.appendChild(bImg);star.appendChild(bubble);star.addEventListener('click',function(){window.open(cfg.url,'_blank');});contactWrap.appendChild(star);});contactBuilt=true;}
+function updateContact(p){if(!contactWrap)contactWrap=document.getElementById('contact-stars');if(!contactWrap)return;if(!contactBuilt)buildContactStars();if(p>=CONTACT_P_IN){var op=Math.min(1,(p-CONTACT_P_IN)/0.04);contactWrap.style.opacity=op;contactWrap.style.pointerEvents=op>0.05?'auto':'none';if(!contactVisible){contactVisible=true;contactWrap.classList.add('contact-visible');if(IS_MOBILE)buildContactStarsMobile();}}else{contactWrap.style.opacity=0;contactWrap.style.pointerEvents='none';if(contactVisible){contactVisible=false;contactWrap.classList.remove('contact-visible');}}}
+
+var MOBILE_BREAKPOINT=768;
+var IS_MOBILE=window.innerWidth<=MOBILE_BREAKPOINT;
+window.addEventListener('resize',function(){IS_MOBILE=window.innerWidth<=MOBILE_BREAKPOINT;});
+
+var MOB_SAT_TOP_A=28,MOB_SAT_TOP_B=72;
+var mobSatA=null,mobSatB=null,mobPanelA=null,mobPanelB=null,mobIframe=null,mobPlaylist=null,mobPanelsReady=false;
+function buildMobileSatellite(){mobSatA=document.getElementById('sat-wrap-mob-a');mobSatB=document.getElementById('sat-wrap-mob-b');mobPanelA=document.getElementById('sat-mob-panel-a');mobPanelB=document.getElementById('sat-mob-panel-b');mobIframe=document.getElementById('sat-mob-iframe');mobPlaylist=document.getElementById('sat-mob-playlist');if(!mobSatA)return;SAT_PLAYLIST.forEach(function(video,idx){var item=document.createElement('div');item.className='sat-playlist-item'+(idx===0?' active':'');var thumb=document.createElement('img');thumb.className='sat-playlist-thumb';thumb.src='https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';thumb.alt='';var title=document.createElement('div');title.className='sat-playlist-title';title.textContent=video.title;item.appendChild(thumb);item.appendChild(title);mobPlaylist.appendChild(item);item.addEventListener('click',function(e){e.stopPropagation();loadMobVideo(idx);});});if(SAT_PLAYLIST.length>0)loadMobVideo(0);}
+function loadMobVideo(idx){if(!SAT_PLAYLIST[idx]||!mobIframe)return;mobIframe.src='https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id+'?autoplay=0&rel=0&modestbranding=1';if(mobPlaylist)mobPlaylist.querySelectorAll('.sat-playlist-item').forEach(function(item,i){item.classList.toggle('active',i===idx);});}
+function showMobPanels(visible){if(!mobPanelA||!mobPanelB)return;if(visible===mobPanelsReady)return;mobPanelsReady=visible;[mobPanelA,mobPanelB].forEach(function(p){p.classList.toggle('panel-ready',visible);p.style.pointerEvents=visible?'auto':'none';});}
+function updateSatelliteMobile(p){if(!mobSatA||!mobSatB)return;var scaleA=0.01,opA=0,scaleB=0.01,opB=0,panels=false;if(p<SAT_P_SLIDE_IN){scaleA=0.01;opA=0;scaleB=0.01;opB=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);var e1=1-Math.pow(1-t1,3);scaleA=e1;opA=Math.min(1,t1*3);var t1b=Math.max(0,t1-0.15)/0.85;scaleB=t1b;opB=Math.min(1,t1b*3);}else if(p<SAT_P_ROT_OUT){scaleA=1;opA=1;scaleB=1;opB=1;panels=true;}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_ROT_OUT)/(SAT_P_GONE-SAT_P_ROT_OUT);scaleA=1-Math.pow(t4,2)*0.99;opA=1-t4;scaleB=scaleA;opB=opA;}else{scaleA=0.01;opA=0;scaleB=0.01;opB=0;}mobSatA.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_A+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleA+');opacity:'+Math.max(0,Math.min(1,opA))+';pointer-events:'+(panels?'auto':'none')+';';mobSatB.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_B+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleB+');opacity:'+Math.max(0,Math.min(1,opB))+';pointer-events:'+(panels?'auto':'none')+';';showMobPanels(panels);}
+
+var MOB_CLOUD_W=42,MOB_CLOUD_GAP=10,MOB_CLOUD_TOP=10;
+function updateCloudsMobile(p){var vw=window.innerWidth,vh=window.innerHeight;cloudEls.forEach(function(item,idx){var cfg=item.cfg,el=item.el;var w=vw*MOB_CLOUD_W/100;el.style.width=w+'px';el.style.height=(w*0.5)+'px';var tx=0,op=0;if(p<cfg.pIn){tx=vw+w;op=0;}else if(p<=cfg.pFull){var t=1-Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn),CLOUD_EASE_IN);tx=vw*(1-t);op=t;}else if(p<cfg.pFadeOut){tx=0;op=1;}else if(p<=cfg.pOut){var t2=Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut),CLOUD_EASE_OUT);tx=-t2*(vw+w);op=1-t2;}else{tx=-(vw+w);op=0;}/* ▼ ZONE D'AJUSTEMENT — décalage X nuages mobile
+         positif = droite / negatif = gauche / 0 = centré */
+      var mobCloudOffsets=[0,8,-10,12,-6,10,-8,5];
+      var xOff=((mobCloudOffsets[idx]||0)/100)*vw;
+      el.style.left=((vw-w)/2+xOff)+'px';
+      el.style.top=(vh*(MOB_CLOUD_TOP/100)+idx*vh*(MOB_CLOUD_GAP/100))+'px';el.style.transform='translateX('+tx+'px)';el.style.opacity=op;el.style.pointerEvents=op>0.1?'auto':'none';});}
+
+var MOB_STAR_RIGHT=20,MOB_STAR_Y_START=12,MOB_STAR_Y_GAP=14;
+function buildContactStarsMobile(){var stars=contactWrap.querySelectorAll('.contact-star');stars.forEach(function(star,idx){var cfg=CONTACT_STARS[idx];if(!cfg)return;var sizePx='calc(var(--star-size) * '+cfg.size+')';star.style.cssText=['right:'+MOB_STAR_RIGHT+'vw;','left: auto;','top:'+(MOB_STAR_Y_START+idx*MOB_STAR_Y_GAP)+'vh;','width:'+sizePx+';','height:'+sizePx+';','--star-dur:'+cfg.dur+'s;','--star-delay:'+cfg.delay+'s;','margin-right: calc('+sizePx+' / -2);','margin-top:   calc('+sizePx+' / -2);','margin-left: 0;'].join('');});}
+
+function updateClouds(p){var vw=window.innerWidth,vh=window.innerHeight;var ladderCx=vw/2;var ladderHW=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ladder-w'))||240;ladderHW=ladderHW/2;cloudEls.forEach(function(item){var cfg=item.cfg,el=item.el;var finalY=vh*(cfg.vPos/100)-cfg.h/2;var finalX=cfg.side==='left'?ladderCx-ladderHW-cfg.hOff-cfg.w:ladderCx+ladderHW+cfg.hOff;var tx=0,op=0;if(p<cfg.pIn){tx=vw+cfg.w;op=0;}else if(p<=cfg.pFull){var t=1-Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn),CLOUD_EASE_IN);tx=(vw+cfg.w)*(1-t);op=t;}else if(p<cfg.pFadeOut){tx=0;op=1;}else if(p<=cfg.pOut){var t2=Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut),CLOUD_EASE_OUT);tx=-t2*(vw+cfg.w);op=1-t2;}else{tx=-(vw+cfg.w);op=0;}el.style.left=finalX+'px';el.style.top=finalY+'px';el.style.transform='translate('+tx+'px,0)';el.style.opacity=op;el.style.pointerEvents=op>0.1?'auto':'none';});}
+
+var NL_W=1073,NL_H=151,currentTY=0;
+var hitbox=document.getElementById('letters-hitbox');
+function positionHitbox(){var st=getComputedStyle(document.documentElement);var nlX=st.getPropertyValue('--nl-x').trim();var nlY=parseFloat(st.getPropertyValue('--nl-y'))||170;var gh=parseFloat(st.getPropertyValue('--ground-h'))||519;var vw=window.innerWidth,vh=window.innerHeight;var left=nlX==='center'?(vw-NL_W)/2:nlX.indexOf('%')>-1?parseFloat(nlX)/100*vw-NL_W/2:parseFloat(nlX);hitbox.style.left=Math.round(left)+'px';hitbox.style.top=Math.round((vh-gh)+nlY+currentTY)+'px';hitbox.style.width=NL_W+'px';hitbox.style.height=NL_H+'px';}
+function initNoiseHover(){var noiseEl=document.getElementById('noise-letters');hitbox.addEventListener('mouseenter',function(){noiseEl.classList.add('noise-active');SND.play(noiseAudio);});hitbox.addEventListener('mouseleave',function(){noiseEl.classList.remove('noise-active');SND.stop(noiseAudio);});}
+
+var TILE_H=200,SM=8;
 var $ladder=document.getElementById('ladder');
-function updateLadder(p){
-  $ladder.style.backgroundPositionY=(p*TILE_H*SM)+'px';
-  var prog=Math.min(1,p/0.25);
-  currentTY=prog*(window.innerHeight*1.1);
-  ['ground','ground-fg','noise-letters'].forEach(function(id){
-    var e=document.getElementById(id);if(e)e.style.transform='translateY('+currentTY+'px)';
-  });
-  positionHitbox();
-}
+function updateLadder(p){$ladder.style.backgroundPositionY=(p*TILE_H*SM)+'px';var prog=Math.min(1,p/0.25);currentTY=prog*(window.innerHeight*1.1);['ground','ground-fg','noise-letters'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.transform='translateY('+currentTY+'px)';});positionHitbox();}
 
-// ── SCROLL ──
 var $prog=document.getElementById('progress');
 var $hint=document.getElementById('hint');
-var oscScrollTimer = null;   // détecte l'arrêt du scroll pour OSC
-var isScrolling    = false;
+var oscScrollTimer=null,isScrolling=false;
+function onScroll(){var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;if(maxSc<=0)return;var p=Math.max(0,Math.min(1,1-window.scrollY/maxSc));$prog.style.width=(p*100)+'%';var scrollHintOpacity=Math.max(0,1-p/0.08);$hint.style.opacity=scrollHintOpacity;var vh=document.getElementById('volume-hint');if(vh)vh.style.opacity=scrollHintOpacity;isScrolling=true;clearTimeout(oscScrollTimer);oscScrollTimer=setTimeout(function(){isScrolling=false;OSC.update(p,false);updateBubble(p,false);},OSC_STOP_DELAY);OSC.update(p,true);updateBubble(p,true);drawSky(p);updateStars(p);updateAltitude(p);updateCharacter(p);updateLadder(p);updateBlocks(p);if(IS_MOBILE){updateCloudsMobile(p);updateSatelliteMobile(p);}else{updateClouds(p);updateSatellite(p);}updateBio(p);updateContact(p);}
 
-function onScroll(){
-  var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;
-  if(maxSc<=0)return;
-  var p=Math.max(0,Math.min(1,1-window.scrollY/maxSc));
-  $prog.style.width=(p*100)+'%';
-  var scrollHintOpacity = Math.max(0,1-p/0.08);
-  $hint.style.opacity = scrollHintOpacity;
-  var vh = document.getElementById('volume-hint');
-  if(vh) vh.style.opacity = scrollHintOpacity;
+function init(){measureLayout();buildClouds();buildSatellite();initBio();if(IS_MOBILE)buildMobileSatellite();initMuteBtn();initNoiseHover();positionHitbox();showFrame('char-sit');showBubble(0);drawSky(0);var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;window.scrollTo({top:maxSc,behavior:'instant'});setTimeout(onScroll,60);}
 
-  // Marque qu'on scrolle activement
-  isScrolling = true;
-  clearTimeout(oscScrollTimer);
-  oscScrollTimer = setTimeout(function(){
-    isScrolling = false;
-    OSC.update(p, false);
-    updateBubble(p, false);
-  }, OSC_STOP_DELAY);
-
-  OSC.update(p, true);
-  updateBubble(p, true);
-
-  drawSky(p); updateStars(p); updateAltitude(p);
-  updateCharacter(p); updateLadder(p); updateBlocks(p); updateClouds(p); updateSatellite(p); updateBio(p); updateContact(p);
-}
-
-// ── INIT ──
-function init(){
-  measureLayout(); buildClouds(); buildSatellite(); initBio();
-  initMuteBtn(); initNoiseHover(); positionHitbox();
-  showFrame('char-sit');
-  showBubble(0);
-  drawSky(0);
-  var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;
-  window.scrollTo({top:maxSc,behavior:'instant'});
-  setTimeout(onScroll,60);
-}
-
-
-window.addEventListener('scroll', onScroll, {passive:true});
-window.addEventListener('resize', function(){measureLayout();buildStars();positionHitbox();onScroll();});
-window.addEventListener('load', init);
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',function(){measureLayout();buildStars();positionHitbox();onScroll();});
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
