@@ -769,6 +769,12 @@ html, body {
    Le desktop reste strictement inchangé.
    ═══════════════════════════════════════════════════════════ */
 @media(max-width:768px){
+  .sat-mob-body {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+}
 
   /* ── Bouton play/pause mobile ──
      ▼ ZONE D'AJUSTEMENT : taille proportionnelle aux nuages
@@ -897,7 +903,7 @@ html, body {
     opacity: 0;
     transition: opacity 0.4s ease;
     pointer-events: none;
-    left: 2%; top: 15%; width: 46%; height: 70%; /* ← ajuste selon ton PNG */
+    left: 0.5%; top: 15%; width: 90vw; height: 100%; /* ← ajuste selon ton PNG */
   }
   .sat-mob-panel.panel-ready { opacity: 1; pointer-events: auto; }
   .sat-mob-player-wrap { flex: 1; position: relative; background: #000; }
@@ -1159,7 +1165,7 @@ var mobSatA=null,mobSatB=null,mobPanelA=null,mobPanelB=null,mobIframe=null,mobPl
 function buildMobileSatellite(){mobSatA=document.getElementById('sat-wrap-mob-a');mobSatB=document.getElementById('sat-wrap-mob-b');mobPanelA=document.getElementById('sat-mob-panel-a');mobPanelB=document.getElementById('sat-mob-panel-b');mobIframe=document.getElementById('sat-mob-iframe');mobPlaylist=document.getElementById('sat-mob-playlist');if(!mobSatA)return;SAT_PLAYLIST.forEach(function(video,idx){var item=document.createElement('div');item.className='sat-playlist-item'+(idx===0?' active':'');var thumb=document.createElement('img');thumb.className='sat-playlist-thumb';thumb.src='https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';thumb.alt='';var title=document.createElement('div');title.className='sat-playlist-title';title.textContent=video.title;item.appendChild(thumb);item.appendChild(title);mobPlaylist.appendChild(item);item.addEventListener('click',function(e){e.stopPropagation();loadMobVideo(idx);});});if(SAT_PLAYLIST.length>0)loadMobVideo(0);}
 function loadMobVideo(idx){if(!SAT_PLAYLIST[idx]||!mobIframe)return;mobIframe.src='https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id+'?autoplay=0&rel=0&modestbranding=1';if(mobPlaylist)mobPlaylist.querySelectorAll('.sat-playlist-item').forEach(function(item,i){item.classList.toggle('active',i===idx);});}
 function showMobPanels(visible){if(!mobPanelA||!mobPanelB)return;if(visible===mobPanelsReady)return;mobPanelsReady=visible;[mobPanelA,mobPanelB].forEach(function(p){p.classList.toggle('panel-ready',visible);p.style.pointerEvents=visible?'auto':'none';});}
-function updateSatelliteMobile(p){if(!mobSatA||!mobSatB)return;var scaleA=0.01,opA=0,scaleB=0.01,opB=0,panels=false;if(p<SAT_P_SLIDE_IN){scaleA=0.01;opA=0;scaleB=0.01;opB=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);var e1=1-Math.pow(1-t1,3);scaleA=e1;opA=Math.min(1,t1*3);var t1b=Math.max(0,t1-0.15)/0.85;scaleB=t1b;opB=Math.min(1,t1b*3);}else if(p<SAT_P_ROT_OUT){scaleA=1;opA=1;scaleB=1;opB=1;panels=true;}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_ROT_OUT)/(SAT_P_GONE-SAT_P_ROT_OUT);scaleA=1-Math.pow(t4,2)*0.99;opA=1-t4;scaleB=scaleA;opB=opA;}else{scaleA=0.01;opA=0;scaleB=0.01;opB=0;}mobSatA.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_A+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleA+');opacity:'+Math.max(0,Math.min(1,opA))+';pointer-events:'+(panels?'auto':'none')+';';mobSatB.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_B+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleB+');opacity:'+Math.max(0,Math.min(1,opB))+';pointer-events:'+(panels?'auto':'none')+';';showMobPanels(panels);}
+function updateSatelliteMobile(p){if(!mobSatA||!mobSatB)return;var scaleA=0.01,opA=0,scaleB=0.01,opB=0,panels=false;if(p<SAT_P_SLIDE_IN){scaleA=0.01;opA=0;scaleB=0.01;opB=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);var e1=1-Math.pow(1-t1,3);scaleA=e1;opA=Math.min(1,t1*3);var t1b=Math.max(0,t1-0.15)/0.85;scaleB=t1b;opB=Math.min(1,t1b*3);}else if(p<SAT_P_ROT_OUT){scaleA=1;opA=1;scaleB=1;opB=1;panels=true;}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_ROT_OUT)/(SAT_P_GONE-SAT_P_ROT_OUT);scaleA=1-Math.pow(t4,2)*0.99;opA=1-t4;scaleB=scaleA;opB=opA;}else{scaleA=0.01;opA=0;scaleB=0.01;opB=0;}mobSatA.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_A+'%;width:100vw;height:60vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleA+');opacity:'+Math.max(0,Math.min(1,opA))+';pointer-events:'+(panels?'auto':'none')+';';mobSatB.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_B+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleB+');opacity:'+Math.max(0,Math.min(1,opB))+';pointer-events:'+(panels?'auto':'none')+';';showMobPanels(panels);}
 
 var MOB_CLOUD_W=42,MOB_CLOUD_GAP=10,MOB_CLOUD_TOP=10;
 function updateCloudsMobile(p){var vw=window.innerWidth,vh=window.innerHeight;cloudEls.forEach(function(item,idx){var cfg=item.cfg,el=item.el;var w=vw*MOB_CLOUD_W/100;el.style.width=w+'px';el.style.height=(w*0.5)+'px';var tx=0,op=0;if(p<cfg.pIn){tx=vw+w;op=0;}else if(p<=cfg.pFull){var t=1-Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn),CLOUD_EASE_IN);tx=vw*(1-t);op=t;}else if(p<cfg.pFadeOut){tx=0;op=1;}else if(p<=cfg.pOut){var t2=Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut),CLOUD_EASE_OUT);tx=-t2*(vw+w);op=1-t2;}else{tx=-(vw+w);op=0;}/* ▼ ZONE D'AJUSTEMENT — décalage X nuages mobile
