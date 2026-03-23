@@ -675,7 +675,7 @@ html, body {
 /* ▼ ZONE D'AJUSTEMENT : taille du texte bio (clamp = dynamique) */
 .bio-col-text {
   font-family: 'Courier New', 'Courier', monospace;
-  font-size: clamp(0.55rem, 1.4vw, 3rem); /* min / fluide / max */
+  font-size: clamp(0.55rem, 1.4vw, 1rem); /* min / fluide / max */
   line-height: 1.8;
   color: rgba(237,233,224,0.85);
   white-space: pre-wrap;
@@ -763,223 +763,18 @@ html, body {
 @keyframes freq-anim { from { height: 10%; } to { height: 100%; } }
 
 
-
-/* ═══════════════════════════════════════════════════════════
-   VIDEO SCREEN — PROJECTION CINÉMA PLEIN ÉCRAN
-   z-index 10 : derrière échelle(24) et personnage(30)
-   L'overlay transparent capture les clics → pause/play
-   ═══════════════════════════════════════════════════════════ */
-#video-screen {
-  position: absolute;
-  inset: 0;
-  z-index: 10;  /* derrière échelle(24) et personnage(30) */
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease;
-}
-#video-screen.video-active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Conteneur avec overflow:hidden pour rogner les bords YouTube */
-#video-iframe-wrap {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-/* Fondu de la vidéo au chargement
-   ▼ ZONE D'AJUSTEMENT : durée du fondu (0.8s) */
-#video-iframe {
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-#video-iframe.video-loaded {
-  opacity: 1;
-}
-
-/* ▼ ZONE D'AJUSTEMENT : augmente les % si les bords YT apparaissent */
-#video-iframe {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 100%;
-  height: 100%;
-  transform: translate(-50%, -50%);
-  border: none;
-  pointer-events: none; /* l'overlay capture les clics */
-}
-
-/* Overlay transparent — capture les clics pour pause/play */
-#video-click-overlay {
-  position: absolute;
-  inset: 0;
-  cursor: pointer;
-  z-index: 2;
-  background: transparent;
-}
-
-/* ── Bouton activer le son de la vidéo ──
-   ▼ ZONE D'AJUSTEMENT : top/right pour repositionner */
-#video-unmute-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
-  font-family: "Share Tech Mono", monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  transition: background 0.2s, opacity 0.3s;
-  pointer-events: auto;
-}
-#video-unmute-btn svg {
-  width: 18px; height: 18px;
-  flex-shrink: 0;
-}
-#video-unmute-btn:hover { background: rgba(255,26,26,0.5); }
-#video-unmute-btn.muted-off { display: none; }
-
-/* ▼ ZONE D'AJUSTEMENT — icône pause visible au clic */
-#video-pause-icon {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  width: 80px; height: 80px;
-  background: rgba(0,0,0,0.5);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-  z-index: 3;
-  transition: transform 0.2s ease, opacity 0.3s ease;
-  opacity: 0;
-}
-#video-pause-icon.show {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
-#video-pause-icon svg {
-  width: 32px; height: 32px;
-  fill: #fff;
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   SATELLITE PLAYLIST DESKTOP
-   Animation : glisse depuis la gauche → rotation → parqué à droite
-   La moitié droite du satellite dépasse hors de l'écran.
-   ▼ ZONE D'AJUSTEMENT :
-      --psat-w / --psat-h : taille du satellite
-      --psat-bottom       : hauteur depuis le bas de l'écran
-   ═══════════════════════════════════════════════════════════ */
-:root {
-  --psat-w:      400px;   /* ← largeur satellite playlist desktop  */
-  --psat-h:      240px;   /* ← hauteur satellite playlist desktop  */
-  --psat-bottom:  20px;   /* ← depuis le bas de l'écran            */
-}
-
-#playlist-sat-desktop {
-  position: fixed;
-  /* Parqué à droite : centre de l'échelle + moitié visible */
-  left: calc(50% + var(--ladder-w)/2);
-  bottom: var(--psat-bottom);
-  width: var(--psat-w);
-  height: var(--psat-h);
-  z-index: 35;
-  pointer-events: none;
-  /* Départ : hors écran à gauche */
-  transform: translateX(calc(-100vw - var(--psat-w)));
-  transition: none; /* animations gérées par JS */
-}
-
-#playlist-sat-img {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-/* Panel playlist positionné sur le PNG satellite
-   ▼ ZONE D'AJUSTEMENT : left/top/width/height selon ton PNG */
-/* ▼ ZONE D'AJUSTEMENT — position/taille du panel playlist desktop
-   Ces % sont relatifs au PNG du satellite                    */
-#playlist-panel-desktop {
-  position: absolute;
-  left: 2%;
-  top: 5%;
-  width: 96%;   /* ← largeur du panel */
-  height: 88%;  /* ← hauteur du panel */
-  overflow-y: auto;
-  background: rgba(8,16,32,0.92);
-  border: 1px solid rgba(100,160,255,0.25);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100,160,255,0.25) transparent;
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   SATELLITE PLAYLIST MOBILE
-   Animation identique desktop mais parqué bas-centre
-   ▼ ZONE D'AJUSTEMENT : taille dans @media mobile
-   ═══════════════════════════════════════════════════════════ */
-#playlist-sat-mob {
-  display: none; /* affiché uniquement en mobile via @media */
-}
-
-
-/* Styles communs playlist (desktop + mobile) */
-.playlist-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 7px;
-  cursor: pointer;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: background 0.15s;
-}
-.playlist-item:hover  { background: rgba(100,160,255,0.1); }
-.playlist-item.active { background: rgba(100,160,255,0.18); }
-.playlist-thumb {
-  width: 48px; height: 27px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid rgba(100,160,255,0.15);
-}
-.playlist-title {
-  font-size: 0.5rem;
-  letter-spacing: 0.04em;
-  color: rgba(237,233,224,0.6);
-  line-height: 1.3;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-.playlist-item.active .playlist-title { color: rgba(100,180,255,0.9); }
-
 /* ═══════════════════════════════════════════════════════════
    MOBILE — max-width: 768px
    Toutes les règles ci-dessous ne s'appliquent qu'au mobile.
    Le desktop reste strictement inchangé.
    ═══════════════════════════════════════════════════════════ */
 @media(max-width:768px){
-  /* ── Image satellite mobile (remplit le conteneur) ── */
   .sat-mob-body {
-    position: absolute;
-    inset: 0;
-    width: 100%; height: 100%;
-    object-fit: contain;
-  }
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+}
 
   /* ── Bouton play/pause mobile ──
      ▼ ZONE D'AJUSTEMENT : taille proportionnelle aux nuages
@@ -1002,14 +797,14 @@ html, body {
     --char-h:           50vw;   /* hauteur personnage                 */
     --char-hoff:        0px;
     --char-voff:        0px;
-    --ufo-w:            150vw;   /* largeur UFO                        */
+    --ufo-w:            90vw;   /* largeur UFO                        */
     --ufo-h:            67vw;
     --ufo-top:          5vw;
     --star-size:        12vw;   /* taille étoiles contact             */
     --bubble-w:         20vw;   /* largeur bulle BD                   */
     --bubble-top:       75vh;
     --bubble-contact-w: 35vw;   /* largeur bulles description étoiles */
-    --sat-w:            100vw;   /* largeur satellites                 */
+    --sat-w:            90vw;   /* largeur satellites                 */
     --sat-h:            50vw;
     --nl-y:             4vw;    /* position verticale lettres         */
     --char-mob-nudge:   0vw;    /* affinage horizontal personnage     */
@@ -1130,7 +925,7 @@ html, body {
     top:        20vh;
     width:      55vw;
     text-align: right;
-    font-size:  clamp(0.7rem, 2.6vw, 2rem);
+    font-size:  clamp(0.5rem, 2.6vw, 0.85rem);
     line-height: 1.6;
   }
   #bio-col-right {
@@ -1139,65 +934,10 @@ html, body {
     top:        60vh; /* ← en dessous de bio-col-left */
     width:      55vw;
     text-align: left;
-    font-size:  clamp(0.7rem, 2.6vw, 2rem);
+    font-size:  clamp(0.5rem, 2.6vw, 0.85rem);
     line-height: 1.6;
   }
 
-
-  /* ── Satellite playlist mobile ──
-     ▼ ZONE D'AJUSTEMENT :
-        width/height : taille du satellite
-        right/bottom : position (gauche de l'échelle = droite = depuis bord droit)  */
-  /* ── Satellite playlist mobile ──
-     Centré en bas de l'écran, la moitié gauche dépasse hors cadre.
-     JS anime via translateX depuis hors-écran gauche → translateX(0).
-     ▼ ZONE D'AJUSTEMENT :
-        width / height : taille du satellite (respecter ratio PNG)
-        bottom         : hauteur depuis le bas de l'écran
-        left           : position horizontale finale (centré = 50% - width/2) */
-  #playlist-sat-mob {
-    display: block;
-    position: fixed;
-    /* Centré en bas — la partie gauche peut dépasser si width > 100vw */
-    left: calc(50% - 40vw);   /* ← centre : 50% - width/2 = 50% - 80vw/2 */
-    bottom: 2vw;               /* ← distance depuis le bas                 */
-    width:  80vw;              /* ← largeur satellite mobile               */
-    height: 40vw;              /* ← hauteur (ratio PNG : width / 2)        */
-    z-index: 35;
-    pointer-events: none;
-    /* Pas de transition CSS — le JS gère entièrement l'animation */
-  }
-  .playlist-sat-img {
-    position: absolute;
-    inset: 0;
-    width: 100%; height: 100%;
-    object-fit: contain;
-    pointer-events: none;
-  }
-  /* ▼ ZONE D'AJUSTEMENT — panel playlist mobile */
-  #playlist-panel-mob {
-    position: absolute;
-    left: 2%;
-    top: 5%;
-    width: 96%;
-    height: 88%;
-    overflow-y: auto;
-    background: rgba(8,16,32,0.92);
-    border: 1px solid rgba(100,160,255,0.25);
-    scrollbar-width: thin;
-  }
-  /* Playlist items plus compacts sur mobile */
-  #playlist-sat-mob .playlist-thumb { width: 32px; height: 18px; }
-  #playlist-sat-mob .playlist-title { font-size: 0.38rem; }
-
-  /* Video screen mobile : iframe couvre tout l'écran (bords rognés) */
-  #video-iframe {
-    /* Pour couvrir un écran portrait (ratio 9:16) avec une vidéo 16:9 :
-       on agrandit l'iframe pour qu'elle remplisse toute la hauteur        */
-    width: 177.78vh;   /* 16/9 * 100vh = largeur minimale pour couvrir */
-    min-width: 100%;
-    height: 100%;
-  }
 
   /* ── UFO centré ── */
   #ufo-wrap {
@@ -1233,31 +973,6 @@ html, body {
 <div id="speech-bubble"><img id="bubble-img" src="" alt=""></div>
 
 <div id="scene">
-
-  <!-- VIDEO SCREEN — inside #scene so z-index is relative to other scene children
-       z-index 10 = derrière échelle(24) et personnage(30) -->
-  <div id="video-screen">
-    <div id="video-iframe-wrap">
-      <iframe id="video-iframe" src="" frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-        allowfullscreen></iframe>
-    </div>
-    <div id="video-click-overlay"></div>
-    <div id="video-pause-icon">
-      <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-    </div>
-    <!-- Bouton activer le son vidéo
-         ▼ ZONE D'AJUSTEMENT : top/right pour repositionner -->
-    <div id="video-unmute-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/>
-        <line x1="23" y1="9" x2="17" y2="15"/>
-        <line x1="17" y1="9" x2="23" y2="15"/>
-      </svg>
-      <span>SON</span>
-    </div>
-  </div>
-
   <canvas id="sky-canvas"></canvas>
   <canvas id="stars-canvas"></canvas>
   <div id="ground"></div>
@@ -1270,21 +985,23 @@ html, body {
     <div class="bio-col" id="bio-col-right"><div class="bio-col-text" id="bio-text-right"></div></div>
   </div>
   <div id="contact-stars"></div>
-  <!-- sat-wrap-mob-a supprimé : vidéo maintenant en plein écran -->
-  <!-- Satellite playlist mobile — bas gauche de l'échelle -->
-  <div id="playlist-sat-mob">
-    <img class="playlist-sat-img" src="assets/satellite-body.png" alt="">
-    <div id="playlist-panel-mob">
-      <div id="mob-playlist"></div>
+  <div id="sat-wrap-mob-a">
+    <img class="sat-mob-body" src="assets/satellite-body.png" alt="">
+    <div class="sat-mob-panel" id="sat-mob-panel-a">
+      <div class="sat-mob-player-wrap">
+        <iframe id="sat-mob-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
     </div>
   </div>
+  <div id="sat-wrap-mob-b">
+    <img class="sat-mob-body" src="assets/satellite-body.png" alt="">
+    <div class="sat-mob-panel" id="sat-mob-panel-b"><div id="sat-mob-playlist"></div></div>
+  </div>
   <div id="clouds-container"></div>
-  <!-- Satellite playlist desktop — bas droit de l'échelle -->
-  <div id="playlist-sat-desktop">
-    <img id="playlist-sat-img" src="assets/satellite-body.png" alt="">
-    <div id="playlist-panel-desktop">
-      <div id="desktop-playlist"></div>
-    </div>
+  <div id="satellite-wrap">
+    <img id="sat-body" src="assets/satellite-body.png" alt="satellite">
+    <div class="sat-panel" id="sat-panel-left"><div id="sat-player-wrap"><iframe id="sat-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
+    <div class="sat-panel" id="sat-panel-right"><div id="sat-playlist"></div></div>
   </div>
   <div id="character">
     <div id="char-sit" class="char-frame active"><img src="assets/char-sit.png" alt=""></div>
@@ -1314,7 +1031,7 @@ var CLOUD_CONFIG = [
 var CLOUD_EASE_IN=3, CLOUD_EASE_OUT=2;
 
 var skyCanvas=document.getElementById('sky-canvas'), skyCtx=skyCanvas.getContext('2d');
-var SKY_ZONES=[[0.00,'#1a4a8e','#5ba3d9','#c8a97a'],[0.20,'#1a4a8e','#4a90c4','#b8955a'],[0.26,'#0a1530','#1a2a50','#5a3020'],[0.30,'#000000','#000000','#000000'],[0.80,'#000000','#000000','#000000'],[1.00,'#000000','#010308','#020205']];
+var SKY_ZONES=[[0.00,'#1a4a8e','#5ba3d9','#c8a97a'],[0.30,'#1a4a8e','#4a90c4','#b8955a'],[0.35,'#1a3a7e','#4080b4','#a07840'],[0.40,'#0d2050','#1a3a6e','#d4835a'],[0.55,'#060d28','#0d1e44','#3a1a0a'],[0.80,'#020810','#060d20','#0f0808'],[1.00,'#000000','#010308','#020205']];
 function lerpColor(a,b,t){var ai=parseInt(a.slice(1),16),bi=parseInt(b.slice(1),16),ar=(ai>>16)&255,ag=(ai>>8)&255,ab=ai&255,br=(bi>>16)&255,bg=(bi>>8)&255,bb=bi&255;return 'rgb('+Math.round(ar+(br-ar)*t)+','+Math.round(ag+(bg-ag)*t)+','+Math.round(ab+(bb-ab)*t)+')';}
 function getSkyColors(p){var z0=SKY_ZONES[0],z1=SKY_ZONES[1];for(var i=0;i<SKY_ZONES.length-1;i++){if(p>=SKY_ZONES[i][0]&&p<=SKY_ZONES[i+1][0]){z0=SKY_ZONES[i];z1=SKY_ZONES[i+1];break;}}var t=(p-z0[0])/(z1[0]-z0[0]||1);return{top:lerpColor(z0[1],z1[1],t),mid:lerpColor(z0[2],z1[2],t),bottom:lerpColor(z0[3],z1[3],t)};}
 function drawSky(p){var W=skyCanvas.width=window.innerWidth,H=skyCanvas.height=window.innerHeight,c=getSkyColors(p),g=skyCtx.createLinearGradient(0,0,0,H);g.addColorStop(0,c.top);g.addColorStop(0.5,c.mid);g.addColorStop(1,c.bottom);skyCtx.fillStyle=g;skyCtx.fillRect(0,0,W,H);if(p<0.5){var so=Math.max(0,(0.5-p)/0.5)*0.6,gh=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-h'))||519,sy=H-gh-20,sg=skyCtx.createRadialGradient(W/2,sy,0,W/2,sy,W*0.3);sg.addColorStop(0,'rgba(255,210,80,'+(so*0.5)+')');sg.addColorStop(0.4,'rgba(255,150,30,'+(so*0.3)+')');sg.addColorStop(1,'transparent');skyCtx.fillStyle=sg;skyCtx.fillRect(0,0,W,H);}}
@@ -1409,25 +1126,13 @@ function hideBubble(){bubbleEl.classList.remove('bubble-visible');bubbleEl.class
 function updateBubble(p,scrolling){bubbleCurrentP=p;if(scrolling){clearTimeout(bubbleTimer);if(bubbleShown)hideBubble();return;}clearTimeout(bubbleTimer);bubbleTimer=setTimeout(function(){showBubble(bubbleCurrentP);},BUBBLE_IDLE_MS);}
 
 var SAT_P_SLIDE_IN=0.28,SAT_P_ROT_IN=0.36,SAT_P_FULL=0.44,SAT_P_ROT_OUT=0.60,SAT_P_SLIDE_OUT=0.68,SAT_P_GONE=0.76;
-/* ▼ ZONE D'AJUSTEMENT — frames animation satellite
-   [0] = sat-left.png (profil gauche, pendant le glissement)
-   [1..n-2] = frames de rotation intermédiaires
-   [n-1] = satellite-body.png (face, position finale)        */
-var SAT_FRAMES = [
-  'assets/sat-left.png',
-  'assets/sat-arrive-1.png',
-  'assets/sat-arrive-2.png',
-  'assets/sat-arrive-3.png',
-  'assets/sat-arrive-4.png',
-  'assets/satellite-body.png',
-];
-/* ▲ FIN */
+var SAT_FRAMES=['assets/sat-left.png','assets/sat-arrive-1.png','assets/sat-arrive-2.png','assets/sat-arrive-3.png','assets/sat-arrive-4.png','assets/satellite-body.png'];
 var SAT_PLAYLIST=[{id:'p61Ol6S1MFk',title:'ICRA#03'},{id:'Fqnx4aSOGGY',title:'ICRA#02'},{id:'9vDohLVVScE',title:'Live in Empty Brain Resort 20'},{id:'sJCsA4dm2II',title:'Live in Yaga Gathering 19'},{id:'VaPSlNfSbrc',title:'Dark freeze'}];
-/* ancien satellite supprimé */
-/* buildSatellite supprimé — remplacé par buildVideoSection */
-/* loadSatVideo supprimé — remplacé par loadVideo */
-/* showSatPanels supprimé */
-/* updateSatellite supprimé — remplacé par updateVideoSection */
+var satWrap=null,satIframe=null,satPanels=null,satBodyImg=null,satPanelsReady=false;
+function buildSatellite(){satWrap=document.getElementById('satellite-wrap');satIframe=document.getElementById('sat-iframe');satPanels=satWrap.querySelectorAll('.sat-panel');satBodyImg=document.getElementById('sat-body');SAT_FRAMES.forEach(function(src){var img=new Image();img.src=src;});var playlist=document.getElementById('sat-playlist');SAT_PLAYLIST.forEach(function(video,idx){var item=document.createElement('div');item.className='sat-playlist-item'+(idx===0?' active':'');var thumb=document.createElement('img');thumb.className='sat-playlist-thumb';thumb.src='https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';thumb.alt='';var title=document.createElement('div');title.className='sat-playlist-title';title.textContent=video.title;item.appendChild(thumb);item.appendChild(title);playlist.appendChild(item);item.addEventListener('click',function(e){e.stopPropagation();loadSatVideo(idx);});});if(SAT_PLAYLIST.length>0)loadSatVideo(0);}
+function loadSatVideo(idx){if(!SAT_PLAYLIST[idx])return;satIframe.src='https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id+'?autoplay=0&rel=0&modestbranding=1&enablejsapi=1';document.querySelectorAll('.sat-playlist-item').forEach(function(item,i){item.classList.toggle('active',i===idx);});}
+function showSatPanels(visible){if(!satPanels||visible===satPanelsReady)return;satPanelsReady=visible;satPanels.forEach(function(panel){panel.classList.toggle('panel-ready',visible);panel.style.pointerEvents=visible?'auto':'none';});}
+function updateSatellite(p){if(!satWrap)return;var n=SAT_FRAMES.length,tx=0,op=0,fi=0,panels=false,restX=0;if(p<SAT_P_SLIDE_IN){tx=-window.innerWidth*1.4;op=Math.max(0,(p-(SAT_P_SLIDE_IN-0.02))/0.02);fi=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);tx=restX-window.innerWidth*1.4*(1-(1-Math.pow(1-t1,3)));op=Math.min(1,t1*3);fi=0;}else if(p<=SAT_P_FULL){var t2=(p-SAT_P_ROT_IN)/(SAT_P_FULL-SAT_P_ROT_IN);tx=restX;op=1;fi=Math.max(0,Math.min(n-1,Math.round(t2*(n-1))));}else if(p<SAT_P_ROT_OUT){tx=restX;op=1;fi=n-1;panels=true;}else if(p<=SAT_P_SLIDE_OUT){var t3=(p-SAT_P_ROT_OUT)/(SAT_P_SLIDE_OUT-SAT_P_ROT_OUT);tx=restX;op=1;fi=Math.max(0,Math.min(n-1,Math.round((1-t3)*(n-1))));}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_SLIDE_OUT)/(SAT_P_GONE-SAT_P_SLIDE_OUT);tx=restX+window.innerWidth*1.4*Math.pow(t4,2);op=1-t4;fi=0;}else{tx=window.innerWidth*1.4;op=0;fi=0;}if(satBodyImg)satBodyImg.src=SAT_FRAMES[fi];satWrap.style.transform='translate(calc(-50% + '+tx+'px), -50%)';satWrap.style.opacity=String(Math.max(0,Math.min(1,op)));showSatPanels(panels);}
 
 var BIO_P_IN=0.60,BIO_P_FULL=0.68,BIO_P_FADE=0.88,BIO_P_OUT=0.96;
 var BIO_TEXT_LEFT=["After studying Fine Arts in Grenoble","and discovering experimental music,"," I began producing Breakcore","under the alias Antiset,"," performing across the French rave ","and festival scene.","My live sets are a raw blend ","of analog synthesis and curated samples."].join('\n');
@@ -1455,11 +1160,12 @@ var MOBILE_BREAKPOINT=768;
 var IS_MOBILE=window.innerWidth<=MOBILE_BREAKPOINT;
 window.addEventListener('resize',function(){IS_MOBILE=window.innerWidth<=MOBILE_BREAKPOINT;});
 
-/* anciennes vars satellites mobiles supprimées */
-/* buildMobileSatellite supprimé */
-/* loadMobVideo supprimé */
-/* showMobPanels supprimé */
-/* updateSatelliteMobile supprimé — remplacé par updateVideoSection */
+var MOB_SAT_TOP_A=28,MOB_SAT_TOP_B=72;
+var mobSatA=null,mobSatB=null,mobPanelA=null,mobPanelB=null,mobIframe=null,mobPlaylist=null,mobPanelsReady=false;
+function buildMobileSatellite(){mobSatA=document.getElementById('sat-wrap-mob-a');mobSatB=document.getElementById('sat-wrap-mob-b');mobPanelA=document.getElementById('sat-mob-panel-a');mobPanelB=document.getElementById('sat-mob-panel-b');mobIframe=document.getElementById('sat-mob-iframe');mobPlaylist=document.getElementById('sat-mob-playlist');if(!mobSatA)return;SAT_PLAYLIST.forEach(function(video,idx){var item=document.createElement('div');item.className='sat-playlist-item'+(idx===0?' active':'');var thumb=document.createElement('img');thumb.className='sat-playlist-thumb';thumb.src='https://img.youtube.com/vi/'+video.id+'/mqdefault.jpg';thumb.alt='';var title=document.createElement('div');title.className='sat-playlist-title';title.textContent=video.title;item.appendChild(thumb);item.appendChild(title);mobPlaylist.appendChild(item);item.addEventListener('click',function(e){e.stopPropagation();loadMobVideo(idx);});});if(SAT_PLAYLIST.length>0)loadMobVideo(0);}
+function loadMobVideo(idx){if(!SAT_PLAYLIST[idx]||!mobIframe)return;mobIframe.src='https://www.youtube.com/embed/'+SAT_PLAYLIST[idx].id+'?autoplay=0&rel=0&modestbranding=1';if(mobPlaylist)mobPlaylist.querySelectorAll('.sat-playlist-item').forEach(function(item,i){item.classList.toggle('active',i===idx);});}
+function showMobPanels(visible){if(!mobPanelA||!mobPanelB)return;if(visible===mobPanelsReady)return;mobPanelsReady=visible;[mobPanelA,mobPanelB].forEach(function(p){p.classList.toggle('panel-ready',visible);p.style.pointerEvents=visible?'auto':'none';});}
+function updateSatelliteMobile(p){if(!mobSatA||!mobSatB)return;var scaleA=0.01,opA=0,scaleB=0.01,opB=0,panels=false;if(p<SAT_P_SLIDE_IN){scaleA=0.01;opA=0;scaleB=0.01;opB=0;}else if(p<=SAT_P_ROT_IN){var t1=(p-SAT_P_SLIDE_IN)/(SAT_P_ROT_IN-SAT_P_SLIDE_IN);var e1=1-Math.pow(1-t1,3);scaleA=e1;opA=Math.min(1,t1*3);var t1b=Math.max(0,t1-0.15)/0.85;scaleB=t1b;opB=Math.min(1,t1b*3);}else if(p<SAT_P_ROT_OUT){scaleA=1;opA=1;scaleB=1;opB=1;panels=true;}else if(p<=SAT_P_GONE){var t4=(p-SAT_P_ROT_OUT)/(SAT_P_GONE-SAT_P_ROT_OUT);scaleA=1-Math.pow(t4,2)*0.99;opA=1-t4;scaleB=scaleA;opB=opA;}else{scaleA=0.01;opA=0;scaleB=0.01;opB=0;}mobSatA.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_A+'%;width:100vw;height:60vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleA+');opacity:'+Math.max(0,Math.min(1,opA))+';pointer-events:'+(panels?'auto':'none')+';';mobSatB.style.cssText='position:absolute;left:50%;top:'+MOB_SAT_TOP_B+'%;width:90vw;height:50vw;z-index:15;will-change:transform,opacity;transform:translate(-50%,-50%) scale('+scaleB+');opacity:'+Math.max(0,Math.min(1,opB))+';pointer-events:'+(panels?'auto':'none')+';';showMobPanels(panels);}
 
 var MOB_CLOUD_W=42,MOB_CLOUD_GAP=10,MOB_CLOUD_TOP=10;
 function updateCloudsMobile(p){var vw=window.innerWidth,vh=window.innerHeight;cloudEls.forEach(function(item,idx){var cfg=item.cfg,el=item.el;var w=vw*MOB_CLOUD_W/100;el.style.width=w+'px';el.style.height=(w*0.5)+'px';var tx=0,op=0;if(p<cfg.pIn){tx=vw+w;op=0;}else if(p<=cfg.pFull){var t=1-Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn),CLOUD_EASE_IN);tx=vw*(1-t);op=t;}else if(p<cfg.pFadeOut){tx=0;op=1;}else if(p<=cfg.pOut){var t2=Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut),CLOUD_EASE_OUT);tx=-t2*(vw+w);op=1-t2;}else{tx=-(vw+w);op=0;}/* ▼ ZONE D'AJUSTEMENT — décalage X nuages mobile
@@ -1469,297 +1175,8 @@ function updateCloudsMobile(p){var vw=window.innerWidth,vh=window.innerHeight;cl
       el.style.left=((vw-w)/2+xOff)+'px';
       el.style.top=(vh*(MOB_CLOUD_TOP/100)+idx*vh*(MOB_CLOUD_GAP/100))+'px';el.style.transform='translateX('+tx+'px)';el.style.opacity=op;el.style.pointerEvents=op>0.1?'auto':'none';});}
 
-var MOB_STAR_X = [15, 65, 35, 75, 20]; /* ← ajuste chaque valeur ici */
-var MOB_STAR_Y_START = 12;  /* ← première étoile : position verticale (vh) */
-var MOB_STAR_Y_GAP   = 14; /* ← écart vertical entre chaque étoile (vh)   */
-
-function buildContactStarsMobile() {
-  var stars = contactWrap.querySelectorAll('.contact-star');
-  stars.forEach(function(star, idx) {
-    var cfg = CONTACT_STARS[idx];
-    if (!cfg) return;
-    var sizePx = 'calc(var(--star-size) * ' + cfg.size + ')';
-    star.style.cssText = [
-      'left:' + (MOB_STAR_X[idx] || 50) + 'vw;',
-      'right: auto;',
-      'top:' + (MOB_STAR_Y_START + idx * MOB_STAR_Y_GAP) + 'vh;',
-      'width:' + sizePx + ';',
-      'height:' + sizePx + ';',
-      '--star-dur:' + cfg.dur + 's;',
-      '--star-delay:' + cfg.delay + 's;',
-      'margin-left: calc(' + sizePx + ' / -2);',
-      'margin-top: calc(' + sizePx + ' / -2);',
-    ].join('');
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-// SECTION VIDEO — PROJECTION CINÉMA + SATELLITE PLAYLIST
-// ══════════════════════════════════════════════════════════════
-
-/* ▼ ZONE D'AJUSTEMENT — timing section vidéo
-   VIDEO_P_IN  : p auquel la vidéo commence à apparaître
-   VIDEO_P_OUT : p auquel la vidéo disparaît               */
-var VIDEO_P_IN  = 0.28;   /* ← début section vidéo         */
-var VIDEO_P_OUT = 0.76;   /* ← fin section vidéo            */
-/* ▲ FIN */
-
-/* ▼ ZONE D'AJUSTEMENT — délai apparition satellite playlist (ms) */
-var PLAYLIST_SAT_DELAY = 2000;   /* ← 2 secondes après lancement vidéo */
-/* ▲ FIN */
-
-var videoScreen       = null;
-var videoIframe       = null;
-var videoOverlay      = null;
-var pauseIcon         = null;
-var psatDesktop       = null;
-var psatMob           = null;
-var desktopPlaylist   = null;
-var mobPlaylist       = null;
-var videoActive       = false;
-var videoPaused       = false;
-var currentVideoIdx   = 0;
-var playlistSatShown  = false;
-var playlistSatTimer  = null;
-var playlistBuilt     = false;
-
-function buildVideoSection() {
-  videoScreen    = document.getElementById('video-screen');
-  videoIframe    = document.getElementById('video-iframe');
-  videoOverlay   = document.getElementById('video-click-overlay');
-  pauseIcon      = document.getElementById('video-pause-icon');
-  psatDesktop    = document.getElementById('playlist-sat-desktop');
-  psatMob        = document.getElementById('playlist-sat-mob');
-  desktopPlaylist = document.getElementById('desktop-playlist');
-  mobPlaylist     = document.getElementById('mob-playlist');
-
-  // Build playlist in both containers
-  [desktopPlaylist, mobPlaylist].forEach(function(container) {
-    if(!container) return;
-    SAT_PLAYLIST.forEach(function(video, idx) {
-      var item  = document.createElement('div');
-      item.className = 'playlist-item' + (idx === 0 ? ' active' : '');
-
-      var thumb = document.createElement('img');
-      thumb.className = 'playlist-thumb';
-      thumb.src = 'https://img.youtube.com/vi/' + video.id + '/mqdefault.jpg';
-      thumb.alt = '';
-
-      var title = document.createElement('div');
-      title.className = 'playlist-title';
-      title.textContent = video.title;
-
-      item.appendChild(thumb);
-      item.appendChild(title);
-      container.appendChild(item);
-
-      item.addEventListener('click', function(e) {
-        e.stopPropagation();
-        loadVideo(idx);
-      });
-    });
-  });
-
-  // Bouton unmute vidéo
-  var unmuteBtn = document.getElementById('video-unmute-btn');
-  var videoMuted = true;
-  if(unmuteBtn) {
-    unmuteBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if(!videoIframe || !videoIframe.src) return;
-      videoMuted = !videoMuted;
-      videoIframe.contentWindow.postMessage(
-        videoMuted
-          ? '{"event":"command","func":"mute","args":""}'
-          : '{"event":"command","func":"unMute","args":""}',
-        '*'
-      );
-      // Toggle icon between muted/unmuted
-      unmuteBtn.innerHTML = videoMuted
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><span>SON</span>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg><span>SON</span>';
-    });
-  }
-
-  // Reset muted state when new video loads
-  videoMuted = true;
-  if(unmuteBtn) {
-    unmuteBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><span>SON</span>';
-  }
-
-  // Click overlay = pause / play
-  if(videoOverlay) {
-    videoOverlay.addEventListener('click', function() {
-      if(!videoIframe || !videoIframe.src) return;
-      if(!videoPaused) {
-        videoIframe.contentWindow.postMessage(
-          '{"event":"command","func":"pauseVideo","args":""}', '*'
-        );
-        videoPaused = true;
-        if(pauseIcon) pauseIcon.classList.add('show');
-        setTimeout(function(){ if(pauseIcon) pauseIcon.classList.remove('show'); }, 800);
-      } else {
-        videoIframe.contentWindow.postMessage(
-          '{"event":"command","func":"playVideo","args":""}', '*'
-        );
-        videoPaused = false;
-      }
-    });
-  }
-
-  playlistBuilt = true;
-}
-
-function loadVideo(idx) {
-  if(!SAT_PLAYLIST[idx] || !videoIframe) return;
-  currentVideoIdx = idx;
-  videoPaused     = false;
-
-  // autoplay=1 + controls=0 + enablejsapi=1 pour postMessage
-  /* ▼ ZONE D'AJUSTEMENT autoplay
-     mute=1 est requis partout pour l'autoplay navigateur
-     L'utilisateur peut activer le son via le bouton mute du site */
-  videoIframe.classList.remove('video-loaded');
-  videoIframe.src = 'https://www.youtube.com/embed/' + SAT_PLAYLIST[idx].id
-    + '?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&mute=1';
-  // Fondu en entrée quand l'iframe est chargée
-  videoIframe.onload = function() {
-    setTimeout(function(){ videoIframe.classList.add('video-loaded'); }, 200);
-  };
-
-  // Marquer l'item actif dans les deux playlists
-  [desktopPlaylist, mobPlaylist].forEach(function(container) {
-    if(!container) return;
-    container.querySelectorAll('.playlist-item').forEach(function(item, i) {
-      item.classList.toggle('active', i === idx);
-    });
-  });
-
-  // Montre le satellite playlist 2 secondes après
-  clearTimeout(playlistSatTimer);
-  playlistSatTimer = setTimeout(function() {
-    showPlaylistSat(true);
-  }, PLAYLIST_SAT_DELAY);
-}
-
-/* ▼ ZONE D'AJUSTEMENT — vitesse animation satellite
-   PSAT_SLIDE_MS  : durée du glissement gauche → position finale (ms)
-   PSAT_ROT_MS    : durée de la rotation (ms)
-   PSAT_FRAME_MS  : durée affichage de chaque frame de rotation (ms)  */
-var PSAT_SLIDE_MS = 900;
-var PSAT_ROT_MS   = 600;
-var PSAT_FRAME_MS = 120;
-/* ▲ FIN */
-
-var psatAnimTimer  = null;
-var psatFrameTimer = null;
-
-function getPsatEl() {
-  return IS_MOBILE ? psatMob : psatDesktop;
-}
-
-function getPsatImg() {
-  var el = getPsatEl();
-  return el ? el.querySelector('img') : null;
-}
-
-function getPsatPanel() {
-  return IS_MOBILE
-    ? document.getElementById('playlist-panel-mob')
-    : document.getElementById('playlist-panel-desktop');
-}
-
-function showPlaylistSat(visible) {
-  playlistSatShown = visible;
-  var el = getPsatEl();
-  if(!el) return;
-
-  // Clear any running animation
-  clearTimeout(psatAnimTimer);
-  clearTimeout(psatFrameTimer);
-
-  if(!visible) {
-    // Hide : slide back out to left instantly
-    el.style.transition = 'transform 0.4s ease';
-    var offscreen = IS_MOBILE
-      ? 'translateX(calc(-100vw - 80vw))' /* ← doit correspondre à width du satellite */
-      : 'translateX(calc(-100vw - var(--psat-w)))';
-    el.style.transform = offscreen;
-    el.style.pointerEvents = 'none';
-    // Hide playlist panel
-    var panel = getPsatPanel();
-    if(panel) panel.style.opacity = '0';
-    return;
-  }
-
-  // Show : animate in
-  el.style.transition = 'none';
-  var img = getPsatImg();
-  var panel = getPsatPanel();
-
-  // Start with sat-left, off-screen left
-  if(img) img.src = SAT_FRAMES[0];
-  if(panel) panel.style.opacity = '0';
-  el.style.pointerEvents = 'none';
-
-  var offscreen = IS_MOBILE
-    ? 'translateX(calc(-100vw - 80vw))'
-    : 'translateX(calc(-100vw - var(--psat-w)))';
-  el.style.transform = offscreen;
-
-  // Phase 1 : slide in to final position
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      el.style.transition = 'transform ' + PSAT_SLIDE_MS + 'ms cubic-bezier(.25,.46,.45,.94)';
-      el.style.transform  = 'translateX(0)';
-    });
-  });
-
-  // Phase 2 : rotation frames after slide
-  psatAnimTimer = setTimeout(function() {
-    var frameIdx = 1;
-    function nextFrame() {
-      if(!img) return;
-      img.src = SAT_FRAMES[Math.min(frameIdx, SAT_FRAMES.length - 1)];
-      frameIdx++;
-      if(frameIdx < SAT_FRAMES.length) {
-        psatFrameTimer = setTimeout(nextFrame, PSAT_FRAME_MS);
-      } else {
-        // Rotation done — show playlist panel
-        el.style.pointerEvents = 'auto';
-        if(panel) {
-          panel.style.transition = 'opacity 0.4s ease';
-          panel.style.opacity = '1';
-        }
-      }
-    }
-    nextFrame();
-  }, PSAT_SLIDE_MS + 50);
-}
-
-function updateVideoSection(p) {
-  if(!videoScreen) return;
-
-  var inSection = (p >= VIDEO_P_IN && p <= VIDEO_P_OUT);
-
-  if(inSection && !videoActive) {
-    // Entrée dans la section : lance la vidéo
-    videoActive = true;
-    videoScreen.classList.add('video-active');
-    if(!playlistBuilt) buildVideoSection();
-    loadVideo(0);
-
-  } else if(!inSection && videoActive) {
-    // Sortie de la section : coupe tout
-    videoActive = false;
-    videoIframe.classList.remove('video-loaded'); // fondu sortie
-    videoScreen.classList.remove('video-active');
-    setTimeout(function(){ videoIframe.src = ''; }, 600); // attend le fondu
-    videoPaused = false;
-    clearTimeout(playlistSatTimer);
-    showPlaylistSat(false);
-  }
-}
+var MOB_STAR_RIGHT=20,MOB_STAR_Y_START=12,MOB_STAR_Y_GAP=14;
+function buildContactStarsMobile(){var stars=contactWrap.querySelectorAll('.contact-star');stars.forEach(function(star,idx){var cfg=CONTACT_STARS[idx];if(!cfg)return;var sizePx='calc(var(--star-size) * '+cfg.size+')';star.style.cssText=['right:'+MOB_STAR_RIGHT+'vw;','left: auto;','top:'+(MOB_STAR_Y_START+idx*MOB_STAR_Y_GAP)+'vh;','width:'+sizePx+';','height:'+sizePx+';','--star-dur:'+cfg.dur+'s;','--star-delay:'+cfg.delay+'s;','margin-right: calc('+sizePx+' / -2);','margin-top:   calc('+sizePx+' / -2);','margin-left: 0;'].join('');});}
 
 function updateClouds(p){var vw=window.innerWidth,vh=window.innerHeight;var ladderCx=vw/2;var ladderHW=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ladder-w'))||240;ladderHW=ladderHW/2;cloudEls.forEach(function(item){var cfg=item.cfg,el=item.el;var finalY=vh*(cfg.vPos/100)-cfg.h/2;var finalX=cfg.side==='left'?ladderCx-ladderHW-cfg.hOff-cfg.w:ladderCx+ladderHW+cfg.hOff;var tx=0,op=0;if(p<cfg.pIn){tx=vw+cfg.w;op=0;}else if(p<=cfg.pFull){var t=1-Math.pow(1-(p-cfg.pIn)/(cfg.pFull-cfg.pIn),CLOUD_EASE_IN);tx=(vw+cfg.w)*(1-t);op=t;}else if(p<cfg.pFadeOut){tx=0;op=1;}else if(p<=cfg.pOut){var t2=Math.pow((p-cfg.pFadeOut)/(cfg.pOut-cfg.pFadeOut),CLOUD_EASE_OUT);tx=-t2*(vw+cfg.w);op=1-t2;}else{tx=-(vw+cfg.w);op=0;}el.style.left=finalX+'px';el.style.top=finalY+'px';el.style.transform='translate('+tx+'px,0)';el.style.opacity=op;el.style.pointerEvents=op>0.1?'auto':'none';});}
 
@@ -1775,9 +1192,9 @@ function updateLadder(p){$ladder.style.backgroundPositionY=(p*TILE_H*SM)+'px';va
 var $prog=document.getElementById('progress');
 var $hint=document.getElementById('hint');
 var oscScrollTimer=null,isScrolling=false;
-function onScroll(){var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;if(maxSc<=0)return;var p=Math.max(0,Math.min(1,1-window.scrollY/maxSc));$prog.style.width=(p*100)+'%';var scrollHintOpacity=Math.max(0,1-p/0.08);$hint.style.opacity=scrollHintOpacity;var vh=document.getElementById('volume-hint');if(vh)vh.style.opacity=scrollHintOpacity;isScrolling=true;clearTimeout(oscScrollTimer);oscScrollTimer=setTimeout(function(){isScrolling=false;OSC.update(p,false);updateBubble(p,false);},OSC_STOP_DELAY);OSC.update(p,true);updateBubble(p,true);drawSky(p);updateStars(p);updateAltitude(p);updateCharacter(p);updateLadder(p);updateBlocks(p);if(IS_MOBILE){updateCloudsMobile(p);}else{updateClouds(p);}updateVideoSection(p);updateBio(p);updateContact(p);}
+function onScroll(){var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;if(maxSc<=0)return;var p=Math.max(0,Math.min(1,1-window.scrollY/maxSc));$prog.style.width=(p*100)+'%';var scrollHintOpacity=Math.max(0,1-p/0.08);$hint.style.opacity=scrollHintOpacity;var vh=document.getElementById('volume-hint');if(vh)vh.style.opacity=scrollHintOpacity;isScrolling=true;clearTimeout(oscScrollTimer);oscScrollTimer=setTimeout(function(){isScrolling=false;OSC.update(p,false);updateBubble(p,false);},OSC_STOP_DELAY);OSC.update(p,true);updateBubble(p,true);drawSky(p);updateStars(p);updateAltitude(p);updateCharacter(p);updateLadder(p);updateBlocks(p);if(IS_MOBILE){updateCloudsMobile(p);updateSatelliteMobile(p);}else{updateClouds(p);updateSatellite(p);}updateBio(p);updateContact(p);}
 
-function init(){measureLayout();buildClouds();buildVideoSection();initBio();initMuteBtn();initNoiseHover();positionHitbox();showFrame('char-sit');showBubble(0);drawSky(0);var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;window.scrollTo({top:maxSc,behavior:'instant'});setTimeout(onScroll,60);}
+function init(){measureLayout();buildClouds();buildSatellite();initBio();if(IS_MOBILE)buildMobileSatellite();initMuteBtn();initNoiseHover();positionHitbox();showFrame('char-sit');showBubble(0);drawSky(0);var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;window.scrollTo({top:maxSc,behavior:'instant'});setTimeout(onScroll,60);}
 
 window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('resize',function(){measureLayout();buildStars();positionHitbox();onScroll();});
