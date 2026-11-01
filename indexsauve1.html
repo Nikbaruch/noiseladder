@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOISE LADDER</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+<style>
+/* ══ POSITION DES LETTRES — ajuste ces 2 variables ══
+   --nl-x : horizontal  "center" / "600px" / "45%"
+   --nl-y : vertical, distance depuis le bas du sol   */
+:root {
+  --nl-x: center;
+  --nl-y: 170px;
+  --ground-h:  519px;
+  --ground-mid:260px;
+  --ladder-w:  240px;
+  --char-w:    80px;
+  --char-h:    120px;
+  --red:       #ff1a1a;
+  --orange:    #ff6600;
+  --fg:        #ede9e0;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;overflow-x:hidden;background:#060606;color:var(--fg);font-family:"Share Tech Mono",monospace;cursor:none;}
+#cursor{position:fixed;pointer-events:none;z-index:9999;width:6px;height:6px;border-radius:50%;background:var(--fg);transform:translate(-50%,-50%);mix-blend-mode:difference;}
+#progress{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--red);z-index:1000;box-shadow:0 0 6px var(--red);transition:width .06s linear;}
+#scroller{height:800vh;position:relative;z-index:0;}
+#scene{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;z-index:1;pointer-events:none;}
+#scene .block,#scene #hint,#scene #character,#scene .ext-link,#scene #noise-letters{pointer-events:auto;}
+#sky-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+#stars-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:0;transition:opacity 0.8s ease;}
+.cloud-layer{position:absolute;left:0;right:0;height:100px;z-index:5;pointer-events:none;}
+#cloud-1{top:20%;}#cloud-2{top:35%;}#cloud-3{top:15%;}
+.cloud{position:absolute;border-radius:50px;background:rgba(255,255,255,0.55);filter:blur(6px);}
+#ladder{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:var(--ladder-w);z-index:24;background:url("assets/ladder-tile.png") repeat-y top center / 100% auto;}
+#ground,#ground-fg{position:absolute;bottom:0;left:0;right:0;height:var(--ground-h);background-repeat:no-repeat;background-position:bottom center;background-size:cover;pointer-events:none;}
+#ground   {z-index:12;background-image:url("assets/ground-bg.png");}
+#ground-fg{z-index:27;background-image:url("assets/ground-fg.png");}
+
+/* NOISE LETTERS — z:26, pointer-events:auto pour le hover */
+#noise-letters{
+  position:absolute;bottom:0;left:0;right:0;height:var(--ground-h);
+  z-index:26;pointer-events:auto;cursor:pointer;
+  background-image:url("assets/noise-letters.png");
+  background-size:1073px 151px;
+  background-repeat:no-repeat;
+  background-position:var(--nl-x) var(--nl-y);
+}
+@keyframes noise-flicker{
+  0%  {background-image:url("assets/letters-noise1.png");}
+  25% {background-image:url("assets/letters-noise2.png");}
+  50% {background-image:url("assets/letters-noise3.png");}
+  75% {background-image:url("assets/letters-noise4.png");}
+  100%{background-image:url("assets/letters-noise1.png");}
+}
+#noise-letters.noise-active{animation:noise-flicker 0.5s steps(1) infinite;}
+
+#character{position:absolute;left:calc(50% + var(--ladder-w)/2 + 4px);width:var(--char-w);height:var(--char-h);z-index:30;}
+.char-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:bottom;display:none;}
+.char-frame.active{display:block;}
+#char-placeholder{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3rem;}
+#hint{position:absolute;bottom:calc(var(--ground-mid) - 200px);left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:16px;pointer-events:none;transition:opacity 0.4s ease;animation:hint-bounce 1.2s ease-in-out infinite;}
+#hint-label{font-family:"Luckiest Guy",monospace;font-size:2rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(236,194,67,0.75);white-space:nowrap;}
+.block{position:absolute;pointer-events:none;will-change:transform,opacity;}
+.block.active{pointer-events:auto;}
+#blk-releases{top:10vh;left:4vw;width:min(36vw,360px);}
+#blk-live{top:10vh;right:4vw;width:min(33vw,320px);text-align:right;}
+#blk-about{top:50%;left:4vw;transform:translateY(-50%);width:min(38vw,380px);}
+#blk-contact{top:8vh;right:4vw;width:min(38vw,380px);text-align:right;}
+.sec-label{font-size:0.56rem;letter-spacing:0.34em;color:var(--red);text-transform:uppercase;margin-bottom:0.65rem;opacity:0.85;}
+.sec-title{font-family:"Bebas Neue",sans-serif;font-size:clamp(1.6rem,3vw,2.8rem);letter-spacing:0.04em;line-height:1;margin-bottom:1rem;}
+.rel-list{display:flex;flex-direction:column;gap:1px;}
+.rel-item{display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0.8rem;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);cursor:none;transition:background .2s;}
+.rel-item:hover{background:rgba(255,26,26,0.05);}
+.rel-num{font-size:.52rem;color:#555;width:18px;flex-shrink:0;}
+.rel-name{font-family:"Bebas Neue",sans-serif;font-size:.9rem;flex:1;}
+.rel-meta{font-size:.52rem;color:#555;margin-top:.1rem;}
+.rel-year{font-family:"Bebas Neue",sans-serif;font-size:1rem;color:rgba(255,26,26,.2);}
+.stat-list{display:flex;flex-direction:column;gap:.9rem;margin-top:1rem;}
+.stat-num{font-family:"Bebas Neue",sans-serif;font-size:2.8rem;line-height:1;color:var(--orange);}
+.stat-label{font-size:.52rem;letter-spacing:.18em;color:#555;text-transform:uppercase;}
+.freq-bars{display:flex;align-items:flex-end;justify-content:flex-end;gap:3px;height:36px;margin-top:1rem;}
+.freq-bar{width:3px;background:var(--red);border-radius:2px 2px 0 0;opacity:.55;animation:freq-anim var(--d) ease-in-out infinite alternate;}
+.about-copy{font-size:.76rem;line-height:2;color:rgba(237,233,224,0.4);}
+.about-copy strong{color:rgba(255,26,26,.8);font-weight:normal;}
+.contact-title{font-family:"Bebas Neue",sans-serif;font-size:clamp(2rem,5vw,4rem);letter-spacing:-.01em;line-height:.9;margin-bottom:1.2rem;}
+.contact-title em{color:var(--red);font-style:normal;}
+.link-grid{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1.5px;margin-top:.8rem;}
+.ext-link{padding:.48rem .9rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);color:rgba(237,233,224,.4);font-family:"Share Tech Mono",monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:none;transition:background .2s,color .2s,border-color .2s;}
+.ext-link:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.contact-mail{margin-top:1rem;font-size:.6rem;letter-spacing:.08em;color:rgba(237,233,224,.14);}
+#altitude{position:absolute;top:2.5vh;left:50%;transform:translateX(-50%);font-size:0.56rem;letter-spacing:0.3em;color:rgba(237,233,224,0.2);text-transform:uppercase;z-index:70;pointer-events:none;transition:opacity 0.5s;white-space:nowrap;}
+@keyframes hint-bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-10px);}}
+@keyframes freq-anim{from{height:10%}to{height:100%}}
+@media(max-width:720px){
+  :root{--ground-h:260px;--ground-mid:130px;--ladder-w:140px;--char-w:56px;--char-h:84px;}
+  #blk-releases,#blk-about{left:4vw;right:auto;width:88vw;}
+  #blk-live{display:none;}
+  #blk-contact{right:4vw;width:88vw;}
+  #hint-label{font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="progress"></div>
+<div id="scroller"></div>
+<audio id="noise-audio" src="assets/letter-noise.mp3" loop preload="auto"></audio>
+
+<div id="scene">
+  <canvas id="sky-canvas"></canvas>
+  <canvas id="stars-canvas"></canvas>
+  <div class="cloud-layer" id="cloud-1">
+    <div class="cloud" style="left:15%;top:20px;width:180px;height:45px;opacity:.6;"></div>
+    <div class="cloud" style="left:60%;top:10px;width:120px;height:35px;opacity:.4;"></div>
+  </div>
+  <div class="cloud-layer" id="cloud-2">
+    <div class="cloud" style="left:35%;top:15px;width:220px;height:50px;opacity:.45;"></div>
+    <div class="cloud" style="left:75%;top:5px;width:150px;height:40px;opacity:.35;"></div>
+  </div>
+  <div class="cloud-layer" id="cloud-3">
+    <div class="cloud" style="left:5%;top:30px;width:100px;height:30px;opacity:.3;"></div>
+    <div class="cloud" style="left:50%;top:20px;width:200px;height:55px;opacity:.5;"></div>
+    <div class="cloud" style="left:82%;top:8px;width:130px;height:38px;opacity:.38;"></div>
+  </div>
+
+  <div id="ground"></div>
+  <div id="ladder"></div>
+  <div id="noise-letters"></div>
+  <div id="ground-fg"></div>
+
+  <div id="character">
+    <div id="char-sit" class="char-frame active"><div id="char-placeholder">&#x1F9CD;</div></div>
+    <div id="char-walk-1" class="char-frame"><div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3rem;">&#x1F9D7;</div></div>
+    <div id="char-walk-2" class="char-frame"><div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:2.9rem;">&#x1F9D7;</div></div>
+    <div id="char-walk-3" class="char-frame"><div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3rem;">&#x1F9D7;</div></div>
+    <div id="char-walk-4" class="char-frame"><div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:2.9rem;">&#x1F9D7;</div></div>
+  </div>
+  <div id="hint"><div id="hint-label">&#x2191; CLIMB TO EXPLORE &#x2191;</div></div>
+  <div id="altitude">Ground level</div>
+
+  <div class="block" id="blk-releases">
+    <div class="sec-label">// Discography</div>
+    <div class="sec-title">RELEASES</div>
+    <div class="rel-list">
+      <div class="rel-item"><div class="rel-num">001</div><div style="flex:1"><div class="rel-name">MACHINE HATRED</div><div class="rel-meta">EP &middot; 4 tracks &middot; Self-Released &middot; 2023</div></div><div class="rel-year">23</div></div>
+      <div class="rel-item"><div class="rel-num">002</div><div style="flex:1"><div class="rel-name">WHITE NOISE RITUAL</div><div class="rel-meta">LP &middot; 8 tracks &middot; Brutal Dept. &middot; 2023</div></div><div class="rel-year">23</div></div>
+      <div class="rel-item"><div class="rel-num">003</div><div style="flex:1"><div class="rel-name">FEEDBVCK</div><div class="rel-meta">Single &middot; Distortion Rec. &middot; 2024</div></div><div class="rel-year">24</div></div>
+      <div class="rel-item"><div class="rel-num">004</div><div style="flex:1"><div class="rel-name">SYSTEM COLLAPSE</div><div class="rel-meta">EP &middot; 6 tracks &middot; Self-Released &middot; 2024</div></div><div class="rel-year">24</div></div>
+      <div class="rel-item"><div class="rel-num">005</div><div style="flex:1"><div class="rel-name">&Uuml;BERMENSCH RAVE</div><div class="rel-meta">LP &middot; 10 tracks &middot; Brutal Dept. &middot; 2025</div></div><div class="rel-year">25</div></div>
+    </div>
+  </div>
+  <div class="block" id="blk-live">
+    <div class="sec-label">// Live</div>
+    <div class="sec-title">LIVE<br>MACHINE</div>
+    <div class="stat-list">
+      <div><div class="stat-num">200+</div><div class="stat-label">avg BPM</div></div>
+      <div><div class="stat-num">50+</div><div class="stat-label">shows played</div></div>
+      <div><div class="stat-num">&infin;</div><div class="stat-label">decibels</div></div>
+    </div>
+    <div class="freq-bars" id="freq-bars"></div>
+  </div>
+  <div class="block" id="blk-about">
+    <div class="sec-label">// About</div>
+    <div class="sec-title">WHO IS<br>NOISE LADDER</div>
+    <p class="about-copy">Solo project born in the bowels of the <strong>European underground</strong>. Noise Ladder makes music that does not ask for permission &mdash; <strong>hardcore tekno</strong>, industrial noise, total distortion. Every performance is an act of <strong>sonic resistance</strong>.</p>
+  </div>
+  <div class="block" id="blk-contact">
+    <div class="sec-label">// Contact &middot; Booking</div>
+    <div class="contact-title">BOOK<br><em>NOISE</em><br>LADDER</div>
+    <div class="link-grid">
+      <a href="#" class="ext-link">Bandcamp</a>
+      <a href="#" class="ext-link">Soundcloud</a>
+      <a href="#" class="ext-link">Instagram</a>
+      <a href="#" class="ext-link">Booking</a>
+      <a href="#" class="ext-link">Resident Advisor</a>
+    </div>
+    <div class="contact-mail">noise@noiseLadder.com</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+var $cursor=document.getElementById('cursor');
+document.addEventListener('mousemove',function(e){$cursor.style.left=e.clientX+'px';$cursor.style.top=e.clientY+'px';});
+
+var skyCanvas=document.getElementById('sky-canvas'),skyCtx=skyCanvas.getContext('2d');
+var SKY_ZONES=[[0,'#1a3a6e','#87CEEB','#c8a97a'],[0.20,'#0f2040','#4a7fc1','#d4935a'],[0.40,'#080d20','#1a2a50','#7a3a1a'],[0.60,'#030810','#080d20','#1a1a3a'],[0.80,'#010305','#030810','#06060f'],[1.00,'#000000','#010305','#020208']];
+function lerpColor(a,b,t){var ai=parseInt(a.slice(1),16),bi=parseInt(b.slice(1),16),ar=(ai>>16)&255,ag=(ai>>8)&255,ab=ai&255,br=(bi>>16)&255,bg=(bi>>8)&255,bb=bi&255;return 'rgb('+Math.round(ar+(br-ar)*t)+','+Math.round(ag+(bg-ag)*t)+','+Math.round(ab+(bb-ab)*t)+')';}
+function getSkyColors(p){var z0=SKY_ZONES[0],z1=SKY_ZONES[1];for(var i=0;i<SKY_ZONES.length-1;i++){if(p>=SKY_ZONES[i][0]&&p<=SKY_ZONES[i+1][0]){z0=SKY_ZONES[i];z1=SKY_ZONES[i+1];break;}}var t=(p-z0[0])/(z1[0]-z0[0]||1);return{top:lerpColor(z0[1],z1[1],t),mid:lerpColor(z0[2],z1[2],t),bottom:lerpColor(z0[3],z1[3],t)};}
+function drawSky(p){var W=skyCanvas.width=window.innerWidth,H=skyCanvas.height=window.innerHeight,c=getSkyColors(p),g=skyCtx.createLinearGradient(0,0,0,H);g.addColorStop(0,c.top);g.addColorStop(0.5,c.mid);g.addColorStop(1,c.bottom);skyCtx.fillStyle=g;skyCtx.fillRect(0,0,W,H);if(p<0.5){var so=Math.max(0,(0.5-p)/0.5)*0.6,gh=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-h'))||519,sy=H-gh-20,sg=skyCtx.createRadialGradient(W/2,sy,0,W/2,sy,W*0.3);sg.addColorStop(0,'rgba(255,210,80,'+(so*0.5)+')');sg.addColorStop(0.4,'rgba(255,150,30,'+(so*0.3)+')');sg.addColorStop(1,'transparent');skyCtx.fillStyle=sg;skyCtx.fillRect(0,0,W,H);}}
+
+var starsCanvas=document.getElementById('stars-canvas'),starsCtx=starsCanvas.getContext('2d'),starsBuilt=false;
+function buildStars(){var W=starsCanvas.width=window.innerWidth,H=starsCanvas.height=window.innerHeight;starsCtx.clearRect(0,0,W,H);var n=Math.floor(W*H/1200);for(var i=0;i<n;i++){var x=Math.random()*W,y=Math.random()*H*0.85,r=Math.random()*1.4+0.3,b=0.4+Math.random()*0.6;starsCtx.beginPath();starsCtx.arc(x,y,r,0,Math.PI*2);starsCtx.fillStyle='rgba(255,255,255,'+b+')';starsCtx.fill();}starsBuilt=true;}
+function updateStars(p){starsCanvas.style.opacity=Math.max(0,Math.min(1,(p-0.45)/0.25));if(!starsBuilt&&p>0.3)buildStars();}
+
+function updateClouds(p){var op=Math.max(0,1-p/0.45);[['cloud-1',0.15],['cloud-2',0.22],['cloud-3',0.10]].forEach(function(pr){var el=document.getElementById(pr[0]);el.style.transform='translateX('+(-p*pr[1]*window.innerWidth)+'px)';el.style.opacity=op;});}
+
+var ALT=[[0,'Ground level'],[0.12,'Low altitude'],[0.30,'Clouds'],[0.50,'High altitude'],[0.65,'Stratosphere'],[0.80,'Near space'],[0.92,'Deep space']];
+function updateAltitude(p){var el=document.getElementById('altitude'),lbl=ALT[0][1];for(var i=0;i<ALT.length;i++)if(p>=ALT[i][0])lbl=ALT[i][1];el.textContent=lbl;el.style.opacity=(p<0.05||p>0.97)?0:1;}
+
+var WF=['char-walk-1','char-walk-2','char-walk-3','char-walk-4'],wf=0,wt=null,cs='sit';
+function setCharState(s){if(cs===s)return;cs=s;if(s==='sit'){clearInterval(wt);wt=null;document.getElementById('char-sit').classList.add('active');WF.forEach(function(id){document.getElementById(id).classList.remove('active');});}else{document.getElementById('char-sit').classList.remove('active');if(!wt){wt=setInterval(function(){document.getElementById(WF[wf]).classList.remove('active');wf=(wf+1)%4;document.getElementById(WF[wf]).classList.add('active');},180);}}}
+var CYS=0,CYE=0;
+function measureLayout(){var vh=window.innerHeight,gh=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ground-h'))||519,gm=Math.round(gh/2),ch=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--char-h'))||120;CYS=vh-gm-ch-8;CYE=Math.round(vh*0.06);}
+function updateCharacter(p){document.getElementById('character').style.top=(CYS+(CYE-CYS)*p)+'px';setCharState(p>=0.02?'climb':'sit');}
+
+var BLOCKS=[{id:'blk-releases',pIn:0.14,pPeak:0.22,pFade:0.42,pOut:0.52,dirIn:'left'},{id:'blk-live',pIn:0.34,pPeak:0.42,pFade:0.58,pOut:0.68,dirIn:'right'},{id:'blk-about',pIn:0.60,pPeak:0.68,pFade:0.82,pOut:0.90,dirIn:'left'},{id:'blk-contact',pIn:0.78,pPeak:0.86,pFade:999,pOut:999,dirIn:'right'}];
+function easeOut(t){return 1-Math.pow(1-t,3);}function easeIn(t){return Math.pow(t,3);}
+function updateBlocks(p){var vw=window.innerWidth;BLOCKS.forEach(function(b){var el=document.getElementById(b.id);if(!el)return;var off=vw*1.1,tx=0,op=0;if(p<b.pIn){tx=b.dirIn==='left'?-off:off;op=0;}else if(p<=b.pPeak){var t=easeOut((p-b.pIn)/(b.pPeak-b.pIn));tx=(b.dirIn==='left'?-off:off)*(1-t);op=t;}else if(p<b.pFade){tx=0;op=1;}else if(p<=b.pOut){var t2=easeIn((p-b.pFade)/(b.pOut-b.pFade));tx=(b.dirIn==='left'?off:-off)*t2;op=1-t2;}else{tx=b.dirIn==='left'?off:-off;op=0;}el.style.transform='translateX('+tx+'px)';el.style.opacity=op;el.classList.toggle('active',op>0.05);});}
+
+function buildFreqBars(){var c=document.getElementById('freq-bars');for(var i=0;i<20;i++){var b=document.createElement('div');b.className='freq-bar';b.style.cssText='--d:'+(0.1+Math.random()*0.35).toFixed(2)+'s;animation-delay:'+(Math.random()*0.2).toFixed(2)+'s;';c.appendChild(b);}}
+
+/* NOISE HOVER — directement sur #noise-letters */
+function initNoiseHover(){
+  var el    = document.getElementById('noise-letters');
+  var audio = document.getElementById('noise-audio');
+  el.addEventListener('mouseenter', function(){
+    el.classList.add('noise-active');
+    audio.currentTime = 0;
+    audio.play().catch(function(){});
+  });
+  el.addEventListener('mouseleave', function(){
+    el.classList.remove('noise-active');
+    audio.pause();
+    audio.currentTime = 0;
+  });
+}
+
+var $ladder=document.getElementById('ladder'),TILE_H=200,SM=8;
+function updateLadder(p){
+  $ladder.style.backgroundPositionY=(p*TILE_H*SM)+'px';
+  var prog=Math.min(1,p/0.25),ty=prog*(window.innerHeight*1.1);
+  ['ground','ground-fg','noise-letters'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.transform='translateY('+ty+'px)';
+  });
+}
+
+var $prog=document.getElementById('progress'),$hint=document.getElementById('hint');
+function onScroll(){var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;if(maxSc<=0)return;var p=Math.max(0,Math.min(1,1-window.scrollY/maxSc));$prog.style.width=(p*100)+'%';$hint.style.opacity=Math.max(0,1-p/0.08);drawSky(p);updateStars(p);updateClouds(p);updateAltitude(p);updateCharacter(p);updateLadder(p);updateBlocks(p);}
+
+function init(){measureLayout();buildFreqBars();initNoiseHover();document.getElementById('character').style.top=CYS+'px';drawSky(0);var maxSc=document.getElementById('scroller').offsetHeight-window.innerHeight;window.scrollTo({top:maxSc,behavior:'instant'});setTimeout(onScroll,60);}
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',function(){measureLayout();buildStars();onScroll();});
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
