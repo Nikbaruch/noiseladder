@@ -74,20 +74,20 @@
       --psat-bottom: 20px;
       /* ← depuis le bas de l'écran            */
 
-      /* ── UFO ── */
-      --ufo-w: 1000px;
-      /* largeur du PNG ufo.png                    */
-      --ufo-h: 800px;
-      /* hauteur du PNG ufo.png                    */
-      --ufo-top: 20px;
-      /* distance depuis le haut de l'écran        */
-
-      /* ── Bio ── */
-      --bio-col-gap: 80px;
+      /* ── Bio ──
+         ▼ ZONE D'AJUSTEMENT MANUEL : TEXTE & TYPO DE LA BIO (DESKTOP)
+         - --bio-font         : police du texte ("Luckiest Guy" style BD)
+         - --bio-size-desktop : taille du texte (min, fluide, max)
+         - --bio-line-height  : espacement entre les lignes
+         - --bio-col-w        : largeur des colonnes de texte          */
+      --bio-font: "Luckiest Guy", cursive, sans-serif;
+      --bio-size-desktop: clamp(1.05rem, 1.55vw, 1.55rem);
+      --bio-line-height: 1.45;
+      --bio-col-gap: 75px;
       /* écart depuis le centre pour chaque colonne */
-      --bio-col-w: 400px;
+      --bio-col-w: 440px;
       /* largeur d'une colonne de texte             */
-      --bio-col-top: 35vh;
+      --bio-col-top: 32vh;
       /* position verticale des colonnes            */
 
       /* ── Étoiles contact ── */
@@ -95,6 +95,23 @@
       /* taille de base des étoiles               */
       --bubble-contact-w: 180px;
       /* largeur des bulles de description        */
+
+      /* ═══════════════════════════════════════════════════════════
+         ▼ ZONE D'AJUSTEMENT MANUEL : ÉPAISSEUR DES BORDS & CONTOURS
+         Diminue ou augmente ces valeurs (en px) pour affiner ou
+         épaissir les contours des lettres et des boîtes du menu/player
+         ═══════════════════════════════════════════════════════════ */
+      --burger-bg: #edd69c;
+      --burger-bg-hover: #f7e4b2;
+      --burger-border: #16132b;
+      --ui-border-w: 1.5px;
+      /* ← épaisseur bordure du menu burger & player audio */
+      --ui-shadow-offset: 2px;
+      /* ← décalage de l'ombre des boîtes                  */
+      --text-stroke-w: 2px;
+      /* ← épaisseur du contour des lettres PUMP UP / CLIMB */
+      --icon-stroke-w: 1.2px;
+      /* ← épaisseur du contour de l'icône de son           */
     }
 
 
@@ -151,6 +168,8 @@
       inset: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
+      height: var(--app-h, 100dvh);
       overflow: hidden;
       z-index: 1;
       pointer-events: none;
@@ -321,6 +340,48 @@
       transform: scale(1.09);
     }
 
+    /* Clignotement doux des nuages à leur arrivée pour indiquer qu'ils sont cliquables */
+    @keyframes cloud-blink-invite {
+
+      0%,
+      100% {
+        filter: brightness(1) drop-shadow(0 0 0px rgba(237, 214, 156, 0));
+      }
+
+      50% {
+        filter: brightness(1.18) drop-shadow(0 0 12px rgba(237, 214, 156, 0.75));
+      }
+    }
+
+    @keyframes play-btn-pulse {
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.14);
+      }
+    }
+
+    .music-cloud.cloud-clickable .cloud-inner {
+      animation: cloud-blink-invite 1.6s ease-in-out infinite;
+    }
+
+    .music-cloud.cloud-clickable .play-btn-img {
+      animation: play-btn-pulse 1.6s ease-in-out infinite;
+    }
+
+    .music-cloud.cloud-playing .cloud-inner {
+      animation: none;
+      filter: drop-shadow(0 0 14px rgba(0, 200, 255, 0.65));
+    }
+
+    .music-cloud.cloud-playing .play-btn-img {
+      animation: none;
+    }
+
     .cloud-bg {
       position: absolute;
       inset: 0;
@@ -436,7 +497,7 @@
      CHAR_BOTTOM_OFFSET_DESKTOP dans le JS pour la hauteur
    ═══════════════════════════════════════════════════════════ */
     #character {
-      position: fixed;
+      position: absolute;
       left: calc(50% + var(--char-hoff));
       bottom: var(--ground-h);
       transform: translate(-50%, 0);
@@ -515,20 +576,17 @@
     }
 
     #hint-label {
-      font-family: "Luckiest Guy", monospace;
+      font-family: "Luckiest Guy", cursive, sans-serif;
       font-size: 2rem;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      /* Même couleur beige opaque (100%) et même contour encré que le menu, directement sur les lettres */
+      /* Même couleur beige opaque (100%) et contour fin réglable via --text-stroke-w */
       color: var(--burger-bg, #edd69c);
       opacity: 1;
       paint-order: stroke fill;
-      -webkit-text-stroke: 5px var(--burger-border, #16132b);
-      text-shadow:
-        2px 2px 0px var(--burger-border, #16132b),
-        -1px -1px 0px var(--burger-border, #16132b),
-        1px -1px 0px var(--burger-border, #16132b),
-        -1px 1px 0px var(--burger-border, #16132b);
+      -webkit-text-stroke: var(--text-stroke-w, 2px) var(--burger-border, #16132b);
+      text-shadow: 1.5px 1.5px 0px var(--burger-border, #16132b);
+      font-variant-emoji: text;
       white-space: nowrap;
     }
 
@@ -578,8 +636,8 @@
       background: rgba(124, 121, 121, 0.35);
       backdrop-filter: blur(8px);
       color: var(--burger-bg, #edd69c);
-      border: 3px solid var(--burger-border, #16132b);
-      box-shadow: 3px 3px 0px var(--burger-border, #16132b);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border, #16132b);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -601,13 +659,13 @@
       height: 50px;
       fill: var(--burger-bg, #edd69c);
       stroke: var(--burger-bg, #edd69c);
-      stroke-width: 2.2;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
       overflow: visible;
-      /* Contour encré autour de l'icône haut-parleur identique aux textes et au menu */
+      /* Contour encré fin autour de l'icône haut-parleur */
       filter:
-        drop-shadow(2px 0 0 var(--burger-border, #16132b)) drop-shadow(-2px 0 0 var(--burger-border, #16132b)) drop-shadow(0 2px 0 var(--burger-border, #16132b)) drop-shadow(0 -2px 0 var(--burger-border, #16132b)) drop-shadow(2px 2px 0 var(--burger-border, #16132b));
+        drop-shadow(var(--icon-stroke-w, 1.2px) 0 0 var(--burger-border, #16132b)) drop-shadow(calc(var(--icon-stroke-w, 1.2px) * -1) 0 0 var(--burger-border, #16132b)) drop-shadow(0 var(--icon-stroke-w, 1.2px) 0 var(--burger-border, #16132b)) drop-shadow(0 calc(var(--icon-stroke-w, 1.2px) * -1) 0 var(--burger-border, #16132b));
     }
 
     #mute-btn svg path {
@@ -629,20 +687,17 @@
     }
 
     #volume-hint-label {
-      font-family: "Luckiest Guy", monospace;
+      font-family: "Luckiest Guy", cursive, sans-serif;
       font-size: 1.5rem;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      /* Même couleur beige opaque (100%) et même contour encré que le menu, directement sur les lettres */
+      /* Même couleur beige opaque (100%) et contour fin réglable via --text-stroke-w */
       color: var(--burger-bg, #edd69c);
       opacity: 1;
       paint-order: stroke fill;
-      -webkit-text-stroke: 4.5px var(--burger-border, #16132b);
-      text-shadow:
-        2px 2px 0px var(--burger-border, #16132b),
-        -1px -1px 0px var(--burger-border, #16132b),
-        1px -1px 0px var(--burger-border, #16132b),
-        -1px 1px 0px var(--burger-border, #16132b);
+      -webkit-text-stroke: var(--text-stroke-w, 2px) var(--burger-border, #16132b);
+      text-shadow: 1.5px 1.5px 0px var(--burger-border, #16132b);
+      font-variant-emoji: text;
       white-space: nowrap;
     }
 
@@ -666,16 +721,9 @@
     /* ═══════════════════════════════════════════════════════════
    MENU BURGER EN BAS À GAUCHE (STYLE BD / ILLUSTRATION)
    ▼ ZONE D'AJUSTEMENT :
-     --burger-bg     : couleur beige des rectangles
-     --burger-border : couleur du contour encré
+     --ui-border-w   : épaisseur du contour (dans :root en haut)
      bottom / left   : position du menu à l'écran
    ═══════════════════════════════════════════════════════════ */
-    :root {
-      --burger-bg: #edd69c;
-      --burger-bg-hover: #f7e4b2;
-      --burger-border: #16132b;
-    }
-
     #burger-nav {
       position: fixed;
       bottom: 26px;
@@ -684,41 +732,48 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      pointer-events: auto;
+      /* pointer-events: none sur le conteneur global pour ne JAMAIS bloquer
+         les étoiles (ex: SoundCloud) quand le menu est fermé */
+      pointer-events: none;
       user-select: none;
     }
 
-    /* Liste des 4 boutons qui s'agrandit vers le haut */
+    /* Liste des 5 boutons qui s'agrandit vers le haut */
     #burger-items {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 9px;
+      margin-bottom: 12px;
       pointer-events: none;
+      visibility: hidden;
       transform-origin: bottom left;
     }
 
     #burger-nav.open #burger-items {
       pointer-events: auto;
+      visibility: visible;
     }
 
     .burger-link {
-      width: 155px;
-      height: 50px;
+      width: 150px;
+      height: 46px;
       background: var(--burger-bg);
-      border: 3px solid var(--burger-border);
-      border-radius: 2px;
-      box-shadow: 3px 3px 0px var(--burger-border);
-      color: #08080c;
-      font-family: 'Arial Black', 'Impact', 'Bebas Neue', sans-serif;
-      font-weight: 900;
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
+      border-radius: 3px;
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border);
+      color: var(--burger-border);
+      /* Police BD comme dans les bulles */
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-weight: 400;
       font-size: 1.35rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding-left: 20px;
+      padding-left: 18px;
+      padding-top: 4px;
+      /* centrage optique de la police Luckiest Guy */
       cursor: pointer;
       /* Fermé par défaut : replié vers le bouton burger en bas */
       opacity: 0;
@@ -767,6 +822,7 @@
 
     /* Bouton icône Burger (les 3 barres empilées en bas à gauche) */
     #burger-toggle {
+      pointer-events: auto;
       background: transparent;
       border: none;
       padding: 4px 0;
@@ -787,12 +843,12 @@
     }
 
     .burger-bar {
-      width: 58px;
-      height: 11px;
+      width: 56px;
+      height: 10px;
       background: var(--burger-bg);
-      border: 2.5px solid var(--burger-border);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
       border-radius: 2px;
-      box-shadow: 2px 2px 0px var(--burger-border);
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border);
       transition: transform 0.25s ease, background 0.2s ease;
     }
 
@@ -810,6 +866,158 @@
 
     #burger-nav.open .burger-bar:nth-child(3) {
       transform: translateX(2px);
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════
+   PLAYER AUDIO EN BAS D'ÉCRAN (MÊME ESPRIT BD QUE LE MENU BURGER)
+   Apparaît au clic sur un nuage et disparaît automatiquement
+   dès que l'on quitte la section musique.
+   ═══════════════════════════════════════════════════════════ */
+    #cloud-player {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translate(-50%, 140%);
+      opacity: 0;
+      z-index: 490;
+      pointer-events: none;
+      background: var(--burger-bg);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
+      border-radius: 3px;
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 310px;
+      max-width: 90vw;
+      user-select: none;
+      transition:
+        transform 0.32s cubic-bezier(0.22, 1.25, 0.36, 1),
+        opacity 0.25s ease;
+    }
+
+    #cloud-player.visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .cp-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .cp-btn {
+      width: 34px;
+      height: 34px;
+      background: var(--burger-bg-hover);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
+      border-radius: 2px;
+      box-shadow: 1.5px 1.5px 0px var(--burger-border);
+      color: var(--burger-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+
+    .cp-btn:hover {
+      background: #fff3d1;
+      transform: translateY(-1px) scale(1.05);
+    }
+
+    .cp-btn:active {
+      transform: translateY(1px) scale(0.95);
+    }
+
+    .cp-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--burger-border);
+    }
+
+    .cp-info {
+      flex: 1;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      overflow: hidden;
+    }
+
+    #cp-title {
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      color: var(--burger-border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-top: 2px;
+    }
+
+    #cp-progress-wrap {
+      width: 100%;
+      height: 8px;
+      background: rgba(22, 19, 43, 0.18);
+      border: 1px solid var(--burger-border);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #cp-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--burger-border);
+      transition: width 0.1s linear;
+    }
+
+    /* Bouton lien SoundCloud intégré à droite dans le lecteur audio */
+    #cp-soundcloud {
+      height: 34px;
+      padding: 0 9px;
+      background: #ff5500;
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
+      border-radius: 2px;
+      box-shadow: 1.5px 1.5px 0px var(--burger-border);
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      flex-shrink: 0;
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      padding-top: 2px;
+      cursor: pointer;
+      transition: transform 0.14s ease, filter 0.14s ease;
+    }
+
+    #cp-soundcloud:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px) scale(1.05);
+    }
+
+    #cp-soundcloud:active {
+      transform: translateY(1px) scale(0.95);
+    }
+
+    #cp-soundcloud svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      flex-shrink: 0;
+      margin-top: -2px;
     }
 
 
@@ -858,6 +1066,32 @@
       animation: ufo-levitate 2.4s ease-in-out infinite;
     }
 
+    /* ═══════════════════════════════════════════════════════════
+   UFO FLYBY — PASSAGES DISCRETS EN ARRIÈRE-PLAN ENTRE LES SECTIONS
+   Suit le scroll et s'incline dans le sens de son déplacement.
+   ▼ ZONE D'AJUSTEMENT : width/height pour la taille, opacity pour la discrétion
+   ═══════════════════════════════════════════════════════════ */
+    #ufo-flyby {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 190px;
+      height: 150px;
+      z-index: 14;
+      /* En arrière-plan (derrière l'échelle 24, les nuages 18 et le perso 30) */
+      pointer-events: none;
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+
+    #ufo-flyby img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: brightness(0.9) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+    }
+
 
     /* ═══════════════════════════════════════════════════════════
    BIO — TEXTE TYPEWRITER (deux colonnes)
@@ -894,11 +1128,16 @@
       text-align: left;
     }
 
+    /* ▼ ZONE D'AJUSTEMENT : style du texte de la Bio (Blanc avec contour noir) */
     .bio-col-text {
-      font-family: 'Courier New', 'Courier', monospace;
-      font-size: clamp(0.55rem, 1.4vw, 3rem);
-      line-height: 1.8;
-      color: rgba(237, 233, 224, 0.85);
+      font-family: var(--bio-font, "Luckiest Guy", cursive, sans-serif);
+      font-size: var(--bio-size-desktop, clamp(1.05rem, 1.55vw, 1.55rem));
+      line-height: var(--bio-line-height, 1.45);
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      paint-order: stroke fill;
+      -webkit-text-stroke: 2px #000000;
+      text-shadow: 2px 2px 0px #000000;
       white-space: pre-wrap;
     }
 
@@ -910,24 +1149,34 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
+      visibility: hidden;
       z-index: 32;
       opacity: 0;
     }
 
     #contact-stars.contact-visible {
       opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .contact-star {
       position: absolute;
+      display: block;
+      text-decoration: none;
       width: var(--star-size);
       height: var(--star-size);
-      pointer-events: inherit;
+      /* Désactivé par défaut pour ne jamais intercepter les clics hors de la section LINKS */
+      pointer-events: none;
       cursor: pointer;
       transform-origin: center center;
       animation: star-pulse var(--star-dur, 3s) ease-in-out infinite;
       animation-delay: var(--star-delay, 0s);
       transition: transform 0.3s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    #contact-stars.contact-visible .contact-star {
+      pointer-events: auto;
     }
 
     .contact-star img.star-img {
@@ -1009,14 +1258,19 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
+      background: #000;
     }
 
+    /* Format 16:9 entier sur tous les écrans (avec bandes noires en haut et en bas si nécessaire) */
     #video-iframe {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 56.25vw;
+      /* 16:9 exact = image entière sans rognage */
+      max-height: 100%;
+      max-width: 177.78vh;
       transform: translate(-50%, -50%);
       border: none;
       pointer-events: none;
@@ -1133,10 +1387,12 @@
       width: 96%;
       height: 88%;
       overflow-y: auto;
-      background: rgba(8, 16, 32, 0.92);
-      border: 1px solid rgba(100, 160, 255, 0.25);
+      background: var(--burger-bg, #edd69c);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 3px;
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border, #16132b);
       scrollbar-width: thin;
-      scrollbar-color: rgba(100, 160, 255, 0.25) transparent;
+      scrollbar-color: var(--burger-border, #16132b) transparent;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.4s ease;
@@ -1147,46 +1403,213 @@
       display: none !important;
     }
 
-    /* Styles communs playlist (desktop + mobile) */
+    /* Styles communs playlist (desktop + mobile) — Style BD cohérent avec le menu et le player */
     .playlist-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 7px;
+      gap: 8px;
+      padding: 6px 8px;
       cursor: pointer;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      transition: background 0.15s;
+      background: var(--burger-bg, #edd69c);
+      border-bottom: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      transition: background 0.15s, transform 0.12s ease;
+    }
+
+    .playlist-item:last-child {
+      border-bottom: none;
     }
 
     .playlist-item:hover {
-      background: rgba(100, 160, 255, 0.1);
+      background: var(--burger-bg-hover, #f7e4b2);
     }
 
     .playlist-item.active {
-      background: rgba(100, 160, 255, 0.18);
+      background: #e1c47e;
     }
 
     .playlist-thumb {
-      width: 48px;
-      height: 27px;
+      width: 52px;
+      height: 30px;
       object-fit: cover;
       flex-shrink: 0;
-      border: 1px solid rgba(100, 160, 255, 0.15);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 2px;
+      box-shadow: 1px 1px 0px var(--burger-border, #16132b);
     }
 
     .playlist-title {
-      font-size: 0.5rem;
-      letter-spacing: 0.04em;
-      color: rgba(237, 233, 224, 0.6);
-      line-height: 1.3;
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      color: var(--burger-border, #16132b);
+      line-height: 1.15;
+      padding-top: 2px;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
     }
 
-    .playlist-item.active .playlist-title {
-      color: rgba(100, 180, 255, 0.9);
+    .playlist-item.active .playlist-title::before {
+      content: "▶ ";
+      font-size: 0.7rem;
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════
+   FORMULAIRE DE CONTACT (MODALE CENTRÉE STYLE BD)
+   Apparaît au clic sur l'étoile Mail, par-dessus tout.
+   ═══════════════════════════════════════════════════════════ */
+    #contact-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 950;
+      background: rgba(6, 6, 10, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+    }
+
+    #contact-modal-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    #contact-modal {
+      width: 100%;
+      max-width: 340px;
+      background: var(--burger-bg, #edd69c);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 4px;
+      box-shadow: 4px 4px 0px var(--burger-border, #16132b);
+      padding: 16px 18px;
+      color: var(--burger-border, #16132b);
+      transform: scale(0.88) translateY(12px);
+      transition: transform 0.25s cubic-bezier(0.22, 1.25, 0.36, 1);
+    }
+
+    #contact-modal-backdrop.open #contact-modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .cm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .cm-title {
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 0.06em;
+      padding-top: 3px;
+    }
+
+    #cm-close {
+      width: 30px;
+      height: 30px;
+      background: var(--burger-bg-hover, #f7e4b2);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 3px;
+      box-shadow: 1.5px 1.5px 0px var(--burger-border, #16132b);
+      color: var(--burger-border, #16132b);
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 2px;
+    }
+
+    #cm-close:hover {
+      background: #fff3d1;
+      transform: scale(1.05);
+    }
+
+    #contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cm-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .cm-label {
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+    }
+
+    .cm-input,
+    .cm-textarea {
+      width: 100%;
+      background: #fbf1d6;
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 3px;
+      padding: 7px 9px;
+      font-family: "Share Tech Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--burger-border, #16132b);
+      outline: none;
+    }
+
+    .cm-input:focus,
+    .cm-textarea:focus {
+      background: #ffffff;
+      box-shadow: 1.5px 1.5px 0px var(--burger-border, #16132b);
+    }
+
+    .cm-textarea {
+      resize: vertical;
+      min-height: 78px;
+      max-height: 160px;
+    }
+
+    #cm-submit {
+      margin-top: 4px;
+      height: 40px;
+      background: var(--burger-bg-hover, #f7e4b2);
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+      border-radius: 3px;
+      box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border, #16132b);
+      color: var(--burger-border, #16132b);
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.08em;
+      padding-top: 4px;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+
+    #cm-submit:hover {
+      background: #fff3d1;
+      transform: translateY(-1px);
+    }
+
+    #cm-submit:active {
+      transform: translateY(1px);
+    }
+
+    #cm-status {
+      display: none;
+      font-family: "Luckiest Guy", cursive, sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding: 6px 4px 2px;
     }
 
 
@@ -1254,6 +1677,12 @@
         /* position verticale lettres         */
         --char-mob-nudge: 0vw;
         /* affinage horizontal personnage     */
+
+        /* Épaisseur fine des bords & contours sur mobile */
+        --ui-border-w: 1.5px;
+        --ui-shadow-offset: 1.5px;
+        --text-stroke-w: 1.4px;
+        --icon-stroke-w: 1px;
       }
 
       /* ── Lettres NOISE LADDER mobile ── */
@@ -1289,7 +1718,7 @@
         left: auto;
         right: 1vw;
         transform: none;
-        bottom: calc(var(--ground-h) + var(--char-h) + -50vw);
+        bottom: calc(var(--char-bottom-mob, 4vw) + var(--char-h) - 6vw);
         width: var(--bubble-w);
       }
 
@@ -1314,30 +1743,38 @@
         transform: none;
       }
 
-      #hint-label {
-        font-size: 3.4vw;
-        -webkit-text-stroke: 3px var(--burger-border, #16132b);
-      }
-
-      /* ── Bio : colonnes empilées ── */
+      /* ── Bio : colonnes empilées sur Mobile ──
+         ▼ ZONE D'AJUSTEMENT MANUEL BIO MOBILE :
+         - font-size : ajuste les 3 valeurs dans clamp(min, fluide, max)
+         - top       : hauteur du bloc gauche (20vh) et du bloc droit (58vh)
+         - width     : largeur du texte (68vw) */
       #bio-col-left {
         right: auto !important;
         left: 5vw !important;
-        top: 20vh;
-        width: 55vw;
-        text-align: right;
-        font-size: clamp(0.7rem, 2.6vw, 2rem);
-        line-height: 1.6;
+        top: 19vh;
+        width: 68vw;
+        text-align: left;
       }
 
       #bio-col-right {
         left: 5vw !important;
         right: auto !important;
-        top: 60vh;
-        width: 55vw;
+        top: 56vh;
+        width: 68vw;
         text-align: left;
-        font-size: clamp(0.7rem, 2.6vw, 2rem);
-        line-height: 1.6;
+      }
+
+      .bio-col-text {
+        font-size: clamp(0.92rem, 3.5vw, 1.35rem);
+        line-height: 1.38;
+        color: #ffffff;
+        -webkit-text-stroke: 1.4px #000000;
+      }
+
+      /* ── UFO de transition plus petit sur Mobile ── */
+      #ufo-flyby {
+        width: 32vw;
+        height: 25vw;
       }
 
       /* ── Cacher impérativement le satellite desktop sur mobile ── */
@@ -1378,28 +1815,38 @@
         width: 96%;
         height: 88%;
         overflow-y: auto;
-        background: rgba(8, 16, 32, 0.92);
-        border: 1px solid rgba(100, 160, 255, 0.25);
+        background: var(--burger-bg, #edd69c);
+        border: var(--ui-border-w, 1.5px) solid var(--burger-border, #16132b);
+        border-radius: 3px;
+        box-shadow: var(--ui-shadow-offset, 1.5px) var(--ui-shadow-offset, 1.5px) 0px var(--burger-border, #16132b);
         scrollbar-width: thin;
+        scrollbar-color: var(--burger-border, #16132b) transparent;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.4s ease;
       }
 
+      #playlist-sat-mob .playlist-item {
+        padding: 4px 6px;
+        gap: 6px;
+      }
+
       #playlist-sat-mob .playlist-thumb {
-        width: 36px;
-        height: 20px;
+        width: 40px;
+        height: 23px;
       }
 
       #playlist-sat-mob .playlist-title {
-        font-size: 0.48rem;
+        font-size: 0.68rem;
       }
 
-      /* Video screen mobile : iframe couvre tout l'écran */
+      /* Video screen mobile : vidéo 16:9 entière (centrée avec bords noirs en haut et en bas) */
       #video-iframe {
-        width: 177.78vh;
-        min-width: 100%;
-        height: 100%;
+        top: 44%;
+        width: 100vw;
+        height: 56.25vw;
+        min-width: 0;
+        max-height: 100%;
       }
 
       /* ── UFO centré ── */
@@ -1419,8 +1866,8 @@
         left: 4vw;
         width: 13vw;
         height: 13vw;
-        border-width: 2.5px;
-        box-shadow: 2px 2px 0px var(--burger-border, #16132b);
+        border-width: var(--ui-border-w, 1.5px);
+        box-shadow: var(--ui-shadow-offset, 1.5px) var(--ui-shadow-offset, 1.5px) 0px var(--burger-border, #16132b);
       }
 
       #mute-btn svg {
@@ -1436,7 +1883,7 @@
       #volume-hint-label {
         font-size: 4.1vw;
         letter-spacing: 0.1em;
-        -webkit-text-stroke: 3.2px var(--burger-border, #16132b);
+        -webkit-text-stroke: var(--text-stroke-w, 1.4px) var(--burger-border, #16132b);
       }
 
       /* ── Menu Burger sur Mobile ── */
@@ -1446,22 +1893,64 @@
       }
 
       #burger-items {
-        gap: 2vw;
-        margin-bottom: 3vw;
+        gap: 1.8vw;
+        margin-bottom: 2.8vw;
       }
 
       .burger-link {
-        width: 34vw;
-        height: 11vw;
-        font-size: 4.4vw;
-        padding-left: 4vw;
-        border-width: 2.5px;
+        width: 32vw;
+        height: 10vw;
+        font-size: 4.2vw;
+        padding-left: 3.8vw;
+        padding-top: 1vw;
+        border-width: var(--ui-border-w, 1.5px);
       }
 
       .burger-bar {
         width: 13vw;
-        height: 2.6vw;
-        border-width: 2px;
+        height: 2.5vw;
+        border-width: var(--ui-border-w, 1.5px);
+      }
+
+      /* ── Player Audio en bas à droite du bouton burger sur Mobile ── */
+      #cloud-player {
+        bottom: 3.5vw;
+        left: auto;
+        right: 3vw;
+        transform: translate(0, 150%);
+        min-width: 0;
+        width: 76vw;
+        padding: 1.8vw 2.8vw;
+        gap: 2.2vw;
+      }
+
+      #cloud-player.visible {
+        transform: translate(0, 0);
+      }
+
+      .cp-btn {
+        width: 7.8vw;
+        height: 7.8vw;
+      }
+
+      .cp-btn svg {
+        width: 3.8vw;
+        height: 3.8vw;
+      }
+
+      #cp-title {
+        font-size: 3.1vw;
+      }
+
+      #cp-soundcloud {
+        height: 7.8vw;
+        padding: 0 2vw;
+        font-size: 2.6vw;
+      }
+
+      #cp-soundcloud svg {
+        width: 4.2vw;
+        height: 4.2vw;
       }
     }
   </style>
@@ -1475,7 +1964,7 @@
   <div id="letters-hitbox"></div>
   <button id="mute-btn" aria-label="Toggle sound"></button>
   <div id="volume-hint">
-    <div id="volume-hint-label">⬅ PUMP UP THE VOLUME</div>
+    <div id="volume-hint-label">◀&#xFE0E; PUMP UP THE VOLUME</div>
   </div>
 
   <!-- Menu Burger en bas à gauche -->
@@ -1493,6 +1982,67 @@
       <span class="burger-bar"></span>
     </button>
   </nav>
+
+  <!-- Player Audio en bas de l'écran (s'affiche au clic sur un nuage et disparaît hors de la section musique) -->
+  <div id="cloud-player" aria-label="Cloud Music Player">
+    <div class="cp-controls">
+      <button type="button" class="cp-btn" id="cp-prev" aria-label="Previous track">
+        <svg viewBox="0 0 24 24">
+          <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+        </svg>
+      </button>
+      <button type="button" class="cp-btn" id="cp-play" aria-label="Play or Pause">
+        <svg id="cp-play-icon" viewBox="0 0 24 24">
+          <polygon points="6,4 20,12 6,20" />
+        </svg>
+      </button>
+      <button type="button" class="cp-btn" id="cp-next" aria-label="Next track">
+        <svg viewBox="0 0 24 24">
+          <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+        </svg>
+      </button>
+    </div>
+    <div class="cp-info">
+      <div id="cp-title">01/12 · MACHINE HATRED</div>
+      <div id="cp-progress-wrap" title="Click to seek">
+        <div id="cp-progress-bar"></div>
+      </div>
+    </div>
+    <a id="cp-soundcloud" href="https://soundcloud.com/noiseladder" target="_blank" rel="noopener noreferrer"
+      title="Listen on SoundCloud" aria-label="Noise Ladder on SoundCloud">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M11.56 8.87V17h8.76c1.85 0 3.35-1.5 3.35-3.35 0-1.72-1.3-3.14-2.97-3.33-.35-2.67-2.63-4.73-5.4-4.73-1.52 0-2.9.63-3.74 1.28zm-2.14.83v7.3h1.07V9.3c-.38.1-.73.23-1.07.4zm-2.13 1.32v5.98h1.07v-6.2c-.38.04-.73.12-1.07.22zm-2.14 1.48v4.5h1.07v-4.65c-.37.02-.73.07-1.07.15zm-2.13.92V17h1.06v-3.8c-.4.07-.75.15-1.06.22zM1 14.35v1.9c.3.08.62.13.96.15v-2.2c-.34.02-.66.07-.96.15z" />
+      </svg>
+      <span>SC</span>
+    </a>
+  </div>
+
+  <!-- Formulaire de Contact centré (s'ouvre au clic sur l'étoile Mail) -->
+  <div id="contact-modal-backdrop" aria-hidden="true">
+    <div id="contact-modal" role="dialog" aria-labelledby="cm-dialog-title">
+      <div class="cm-header">
+        <div class="cm-title" id="cm-dialog-title">EMAIL ME</div>
+        <button type="button" id="cm-close" aria-label="Close form">✕</button>
+      </div>
+      <form id="contact-form">
+        <div class="cm-field">
+          <label class="cm-label" for="cm-name">NAME</label>
+          <input class="cm-input" type="text" id="cm-name" name="name" required autocomplete="name">
+        </div>
+        <div class="cm-field">
+          <label class="cm-label" for="cm-email">EMAIL</label>
+          <input class="cm-input" type="email" id="cm-email" name="email" required autocomplete="email">
+        </div>
+        <div class="cm-field">
+          <label class="cm-label" for="cm-message">MESSAGE</label>
+          <textarea class="cm-textarea" id="cm-message" name="message" required></textarea>
+        </div>
+        <button type="submit" id="cm-submit">SEND</button>
+        <div id="cm-status"></div>
+      </form>
+    </div>
+  </div>
 
   <div id="speech-bubble"><img id="bubble-img" src="" alt=""></div>
 
@@ -1524,6 +2074,7 @@
     <canvas id="sky-canvas"></canvas>
     <canvas id="stars-canvas"></canvas>
     <div id="ground"></div>
+    <div id="ufo-flyby"><img src="assets/ufo.png" alt=""></div>
     <div id="ladder"></div>
     <div id="noise-letters"></div>
     <div id="ground-fg"></div>
@@ -1567,7 +2118,7 @@
       <div id="char-climb-4" class="char-frame"><img src="assets/char-climb-4.png" alt=""></div>
     </div>
     <div id="hint">
-      <div id="hint-label">⬆ CLIMB TO EXPLORE ⬆</div>
+      <div id="hint-label">▲&#xFE0E; CLIMB TO EXPLORE ▲&#xFE0E;</div>
     </div>
     <div id="altitude">Ground level</div>
   </div>
@@ -1580,15 +2131,27 @@
     var IS_MOBILE = window.innerWidth <= MOBILE_BREAKPOINT;
     var IS_TABLET = !IS_MOBILE && (window.innerWidth <= TABLET_MAX_WIDTH || window.innerHeight >= 1000);
 
+    /* ═══════════════════════════════════════════════════════════════════════════
+       ▼ ZONE D'AJUSTEMENT MANUEL : NUAGES MUSICAUX & FICHIERS AUDIO (.MP3)
+       Pour modifier un morceau ou en ajouter un nouveau :
+       - mp3  : chemin vers ton fichier audio dans le dossier assets/
+       - name : titre affiché dans le player en bas de l'écran
+       - png  : image du nuage (cloud-1.png à cloud-9.png)
+       ═══════════════════════════════════════════════════════════════════════════ */
     var CLOUD_CONFIG = [
-      { png: 'assets/cloud-1.png', mp3: 'assets/track-01.mp3', name: 'MACHINE HATRED', w: 450, h: 250, side: 'left', vPos: 80, hOff: 100, pIn: 0.05, pFull: 0.11, pFadeOut: 0.32, pOut: 0.40, z: 25 },
-      { png: 'assets/cloud-2.png', mp3: 'assets/track-02.mp3', name: 'WHITE NOISE RITUAL', w: 400, h: 250, side: 'right', vPos: 80, hOff: 100, pIn: 0.06, pFull: 0.12, pFadeOut: 0.32, pOut: 0.40, z: 200 },
-      { png: 'assets/cloud-3.png', mp3: 'assets/track-03.mp3', name: 'FEEDBVCK', w: 400, h: 200, side: 'left', vPos: 60, hOff: 5, pIn: 0.08, pFull: 0.14, pFadeOut: 0.34, pOut: 0.42, z: 15 },
-      { png: 'assets/cloud-5.png', mp3: 'assets/track-05.mp3', name: 'SYSTEM COLLAPSE', w: 400, h: 230, side: 'right', vPos: 60, hOff: 1, pIn: 0.09, pFull: 0.15, pFadeOut: 0.34, pOut: 0.42, z: 10 },
-      { png: 'assets/cloud-4.png', mp3: 'assets/track-04.mp3', name: 'SYSTEM COLLAPSE', w: 300, h: 170, side: 'right', vPos: 20, hOff: 1, pIn: 0.09, pFull: 0.15, pFadeOut: 0.34, pOut: 0.42, z: 10 },
-      { png: 'assets/cloud-6.png', mp3: 'assets/track-06.mp3', name: 'DRILL & KILL', w: 370, h: 200, side: 'right', vPos: 35, hOff: 200, pIn: 0.12, pFull: 0.18, pFadeOut: 0.36, pOut: 0.43, z: 5 },
-      { png: 'assets/cloud-7.png', mp3: 'assets/track-07.mp3', name: 'STATIC DEATH', w: 310, h: 180, side: 'left', vPos: 38, hOff: 5, pIn: 0.14, pFull: 0.20, pFadeOut: 0.37, pOut: 0.44, z: 14 },
-      { png: 'assets/cloud-9.png', mp3: 'assets/track-09.mp3', name: 'ZERO SIGNAL', w: 295, h: 168, side: 'left', vPos: 25, hOff: 200, pIn: 0.17, pFull: 0.23, pFadeOut: 0.38, pOut: 0.45, z: 21 },
+      { png: 'assets/cloud-1.png', mp3: 'assets/track-01.mp3', name: 'We want Moshiach now', w: 440, h: 245, side: 'left', vPos: 82, hOff: 90, pIn: 0.04, pFull: 0.10, pFadeOut: 0.34, pOut: 0.41, z: 25 },
+      { png: 'assets/cloud-2.png', mp3: 'assets/track-02.mp3', name: 'We like to book it', w: 390, h: 240, side: 'right', vPos: 82, hOff: 90, pIn: 0.05, pFull: 0.11, pFadeOut: 0.34, pOut: 0.41, z: 200 },
+      { png: 'assets/cloud-3.png', mp3: 'assets/track-03.mp3', name: 'Tarantula', w: 390, h: 195, side: 'left', vPos: 65, hOff: 15, pIn: 0.07, pFull: 0.13, pFadeOut: 0.35, pOut: 0.42, z: 15 },
+      { png: 'assets/cloud-4.png', mp3: 'assets/track-04.mp3', name: 'Rebbe core', w: 300, h: 170, side: 'right', vPos: 20, hOff: 15, pIn: 0.08, pFull: 0.14, pFadeOut: 0.35, pOut: 0.42, z: 10 },
+      { png: 'assets/cloud-5.png', mp3: 'assets/track-05.mp3', name: 'Degeneration', w: 390, h: 225, side: 'right', vPos: 62, hOff: 10, pIn: 0.09, pFull: 0.15, pFadeOut: 0.36, pOut: 0.42, z: 12 },
+      { png: 'assets/cloud-6.png', mp3: 'assets/track-06.mp3', name: 'Dark forest', w: 360, h: 195, side: 'right', vPos: 38, hOff: 190, pIn: 0.11, pFull: 0.17, pFadeOut: 0.36, pOut: 0.43, z: 5 },
+      { png: 'assets/cloud-7.png', mp3: 'assets/track-07.mp3', name: 'Total destruction', w: 310, h: 180, side: 'left', vPos: 42, hOff: 15, pIn: 0.13, pFull: 0.19, pFadeOut: 0.37, pOut: 0.43, z: 14 },
+      { png: 'assets/cloud-8.png', mp3: 'assets/track-08.mp3', name: 'All system reboot', w: 330, h: 185, side: 'left', vPos: 18, hOff: 60, pIn: 0.14, pFull: 0.20, pFadeOut: 0.37, pOut: 0.43, z: 16 },
+      { png: 'assets/cloud-9.png', mp3: 'assets/track-09.mp3', name: 'Dark ritual', w: 295, h: 168, side: 'left', vPos: 28, hOff: 205, pIn: 0.16, pFull: 0.22, pFadeOut: 0.38, pOut: 0.44, z: 21 },
+      /* ▼ Nouveaux nuages supplémentaires (remplace les fichiers mp3 et les titres ci-dessous) ▼ */
+      { png: 'assets/cloud-1.png', mp3: 'assets/track-10.mp3', name: 'IRON LADDER', w: 340, h: 190, side: 'right', vPos: 50, hOff: 150, pIn: 0.17, pFull: 0.23, pFadeOut: 0.38, pOut: 0.44, z: 19 },
+      { png: 'assets/cloud-3.png', mp3: 'assets/track-11.mp3', name: 'HARSH VILNIUS', w: 320, h: 175, side: 'left', vPos: 54, hOff: 175, pIn: 0.18, pFull: 0.24, pFadeOut: 0.38, pOut: 0.44, z: 17 },
+      { png: 'assets/cloud-6.png', mp3: 'assets/track-12.mp3', name: 'REBBE CORE', w: 310, h: 170, side: 'right', vPos: 14, hOff: 170, pIn: 0.19, pFull: 0.25, pFadeOut: 0.39, pOut: 0.44, z: 22 }
     ];
     var CLOUD_EASE_IN = 3, CLOUD_EASE_OUT = 2;
 
@@ -1745,20 +2308,25 @@
     /* ▼ ZONE D'AJUSTEMENT position verticale du personnage
        positif = monte, negatif = descend
        - Desktop : inchangé (-150)
-       - Mobile  : inchangé (0)
+       - Mobile  : CHAR_BOTTOM_MOBILE_VW (en % de la largeur d'écran depuis le bas,
+                   ex: 3.5 = posé pile sur le sol désertique sur iPhone Mini / Pro)
        - Tablette : position fixe depuis le bas (110px) pour être assis sur le sol */
     var CHAR_BOTTOM_OFFSET_DESKTOP = -150;
-    var CHAR_BOTTOM_OFFSET_MOBILE = 0;
+    var CHAR_BOTTOM_MOBILE_VW = 3.5; /* ← ajuste ici (ex: 2 pour baisser, 6 pour monter sur mobile) */
     var CHAR_BOTTOM_TABLET_PX = 110; /* ← ajuste ici la hauteur du perso sur tablette */
     /* ▲ FIN */
 
     function measureLayout() {
+      /* Synchronise la hauteur réelle visible (évite que la barre Safari iOS cache le sol) */
+      document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
+
       var charEl = document.getElementById('character');
       if (!charEl) return;
 
       if (IS_MOBILE) {
-        var groundHMob = Math.min(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-h')) || 519, window.innerHeight * 0.35);
-        charEl.style.bottom = (groundHMob + CHAR_BOTTOM_OFFSET_MOBILE) + 'px';
+        var bottomPx = Math.round(window.innerWidth * (CHAR_BOTTOM_MOBILE_VW / 100));
+        charEl.style.bottom = bottomPx + 'px';
+        document.documentElement.style.setProperty('--char-bottom-mob', CHAR_BOTTOM_MOBILE_VW + 'vw');
       } else if (IS_TABLET) {
         /* Sur tablette, #ground fait toujours 519px de haut : on fixe le personnage
            au pied de l'échelle sur le sol sans subir le grand innerHeight de l'iPad */
@@ -1882,12 +2450,203 @@
       return { update: update, sync: sync };
     })();
 
+    /* ═══════════════════════════════════════════════════════════
+       NUAGES MUSICAUX + PLAYER AUDIO EN BAS D'ÉCRAN
+       ═══════════════════════════════════════════════════════════ */
     var cloudEls = [];
+    var activeCloudIdx = 0;
+    var playerActivatedByUser = false;
+    var MUSIC_SECTION_P_MIN = 0.03;
+    var MUSIC_SECTION_P_MAX = 0.44;
+    /* ▼ ZONE D'AJUSTEMENT : durée du fondu sonore (en ms) quand on quitte la section musique */
+    var CLOUD_FADE_OUT_MS = 650;
+
+    function cancelCloudFade(item) {
+      if (item && item.fadeTimer) {
+        clearInterval(item.fadeTimer);
+        item.fadeTimer = null;
+      }
+      if (item && item.audio) {
+        item.audio.volume = 1;
+      }
+    }
+
+    function fadeOutCloudAudio(item) {
+      if (!item || !item.audio || item.audio.paused) return;
+      if (item.fadeTimer) return; /* fondu déjà en cours */
+
+      var audio = item.audio;
+      var stepMs = 40;
+      var steps = Math.max(1, Math.floor(CLOUD_FADE_OUT_MS / stepMs));
+      var volStep = audio.volume / steps;
+
+      item.fadeTimer = setInterval(function () {
+        if (audio.paused) {
+          cancelCloudFade(item);
+          return;
+        }
+        var nextVol = audio.volume - volStep;
+        if (nextVol <= 0.02) {
+          clearInterval(item.fadeTimer);
+          item.fadeTimer = null;
+          audio.pause();
+          audio.volume = 1;
+          item.playBtn.src = item.playPng;
+          item.el.classList.remove('cloud-playing');
+          updateCloudPlayerUI();
+        } else {
+          audio.volume = nextVol;
+        }
+      }, stepMs);
+    }
+
+    function unlockGlobalSoundIcon() {
+      if (!SND.isUnlocked() || SND.isMuted()) {
+        SND.unlock();
+        SND.setMuted(false);
+        var mb = document.getElementById('mute-btn');
+        var hint = document.getElementById('volume-hint');
+        var svgOn = '<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';
+        if (mb) mb.innerHTML = svgOn;
+        if (hint) hint.classList.add('sound-on');
+      }
+    }
+
+    function updateCloudPlayerUI() {
+      var item = cloudEls[activeCloudIdx];
+      if (!item) return;
+      var titleEl = document.getElementById('cp-title');
+      var playIcon = document.getElementById('cp-play-icon');
+      var progBar = document.getElementById('cp-progress-bar');
+
+      var numStr = String(activeCloudIdx + 1).padStart(2, '0') + '/' + String(cloudEls.length).padStart(2, '0');
+      if (titleEl) {
+        titleEl.textContent = numStr + ' · ' + item.cfg.name;
+      }
+
+      var isPlaying = !item.audio.paused;
+      if (playIcon) {
+        playIcon.innerHTML = isPlaying
+          ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+          : '<polygon points="6,4 20,12 6,20"/>';
+      }
+
+      if (progBar) {
+        var pct = item.audio.duration ? (item.audio.currentTime / item.audio.duration) * 100 : 0;
+        progBar.style.width = pct + '%';
+      }
+
+      cloudEls.forEach(function (c, i) {
+        var playingThis = (i === activeCloudIdx && !c.audio.paused);
+        c.el.classList.toggle('cloud-playing', playingThis);
+        c.playBtn.src = playingThis ? c.pausePng : c.playPng;
+      });
+    }
+
+    function playCloudByIndex(idx, toggleIfSame) {
+      if (!cloudEls.length) return;
+      var targetIdx = (idx + cloudEls.length) % cloudEls.length;
+      var targetItem = cloudEls[targetIdx];
+      if (!targetItem) return;
+
+      unlockGlobalSoundIcon();
+      playerActivatedByUser = true;
+      cancelCloudFade(targetItem);
+
+      var cp = document.getElementById('cloud-player');
+      if (cp) cp.classList.add('visible');
+
+      if (toggleIfSame && targetIdx === activeCloudIdx && !targetItem.audio.paused) {
+        targetItem.audio.pause();
+        updateCloudPlayerUI();
+        return;
+      }
+
+      cloudEls.forEach(function (other, i) {
+        if (i !== targetIdx) {
+          cancelCloudFade(other);
+          other.audio.pause();
+          other.playBtn.src = other.playPng;
+          other.el.classList.remove('cloud-playing');
+        }
+      });
+
+      activeCloudIdx = targetIdx;
+      targetItem.audio.volume = 1;
+      targetItem.audio.play().catch(function () { });
+      updateCloudPlayerUI();
+    }
+
+    function updateCloudPlayerSectionVisibility(p) {
+      var cp = document.getElementById('cloud-player');
+      if (!cp) return;
+      var inMusicSection = (p >= MUSIC_SECTION_P_MIN && p < MUSIC_SECTION_P_MAX);
+      if (!inMusicSection) {
+        /* Dès que l'utilisateur quitte la section musique (vers le haut ou vers le bas),
+           on masque le player et on coupe la musique en fondu doux */
+        cp.classList.remove('visible');
+        playerActivatedByUser = false;
+        cloudEls.forEach(function (c) {
+          if (!c.audio.paused) {
+            fadeOutCloudAudio(c);
+          }
+        });
+      } else if (playerActivatedByUser) {
+        cp.classList.add('visible');
+      }
+    }
+
+    function initCloudPlayerControls() {
+      var prevBtn = document.getElementById('cp-prev');
+      var playBtn = document.getElementById('cp-play');
+      var nextBtn = document.getElementById('cp-next');
+      var progWrap = document.getElementById('cp-progress-wrap');
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var cur = cloudEls[activeCloudIdx];
+          if (cur && cur.audio.currentTime > 3) {
+            cur.audio.currentTime = 0;
+            updateCloudPlayerUI();
+          } else {
+            playCloudByIndex(activeCloudIdx - 1, false);
+          }
+        });
+      }
+
+      if (playBtn) {
+        playBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          playCloudByIndex(activeCloudIdx, true);
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          playCloudByIndex(activeCloudIdx + 1, false);
+        });
+      }
+
+      if (progWrap) {
+        progWrap.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var cur = cloudEls[activeCloudIdx];
+          if (!cur || !cur.audio.duration) return;
+          var rect = progWrap.getBoundingClientRect();
+          var ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          cur.audio.currentTime = ratio * cur.audio.duration;
+          updateCloudPlayerUI();
+        });
+      }
+    }
+
     function buildClouds() {
       var container = document.getElementById('clouds-container');
       container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:18;';
       var PLAY_PNG = 'assets/play-btn-play.png', PAUSE_PNG = 'assets/play-btn-pause.png';
-      CLOUD_CONFIG.forEach(function (cfg) {
+      CLOUD_CONFIG.forEach(function (cfg, idx) {
         var el = document.createElement('div');
         el.className = 'music-cloud';
         el.style.cssText = 'width:' + cfg.w + 'px;height:' + cfg.h + 'px;cursor:pointer;z-index:' + (cfg.z || 18) + ';';
@@ -1897,11 +2656,13 @@
         bg.className = 'cloud-bg';
         bg.src = cfg.png;
         bg.alt = '';
+        bg.onerror = function () { this.onerror = null; this.src = 'assets/cloud-1.png'; };
         inner.appendChild(bg);
         var fill = document.createElement('img');
         fill.className = 'cloud-fill';
         fill.src = cfg.png;
         fill.alt = '';
+        fill.onerror = function () { this.onerror = null; this.src = 'assets/cloud-1.png'; };
         inner.appendChild(fill);
         el.appendChild(inner);
         var playBtn = document.createElement('img');
@@ -1915,41 +2676,32 @@
         SND.register(audio);
         var item = { el: el, cfg: cfg, audio: audio, fill: fill, playBtn: playBtn, playPng: PLAY_PNG, pausePng: PAUSE_PNG };
         cloudEls.push(item);
+
+        /* Clic sur le nuage ou son bouton Play : lance le morceau et ouvre le player en bas */
         el.addEventListener('click', function (e) {
-          if (e.target === playBtn) return;
-          if (!audio.duration) return;
-          var rect = el.getBoundingClientRect();
-          audio.currentTime = (e.clientX - rect.left) / rect.width * audio.duration;
+          e.stopPropagation();
+          playCloudByIndex(idx, true);
         });
         playBtn.addEventListener('click', function (e) {
           e.stopPropagation();
-          if (!SND.isUnlocked() || SND.isMuted()) {
-            SND.unlock();
-            SND.setMuted(false);
-            var mb = document.getElementById('mute-btn');
-            var hint = document.getElementById('volume-hint');
-            var svgOn = '<svg viewBox="0 0 24 24"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/></svg>';
-            if (mb) mb.innerHTML = svgOn;
-            if (hint) hint.classList.add('sound-on');
-          }
-          if (!audio.paused) {
-            audio.pause();
-            playBtn.src = PLAY_PNG;
-          } else {
-            cloudEls.forEach(function (o) { if (o.audio !== audio) { o.audio.pause(); o.playBtn.src = o.playPng; } });
-            audio.play().catch(function () { });
-            playBtn.src = PAUSE_PNG;
-          }
+          playCloudByIndex(idx, true);
         });
+
         audio.addEventListener('timeupdate', function () {
           if (!audio.duration) return;
           fill.style.clipPath = 'inset(0 ' + (100 - audio.currentTime / audio.duration * 100) + '% 0 0)';
+          if (idx === activeCloudIdx) updateCloudPlayerUI();
         });
         audio.addEventListener('ended', function () {
           playBtn.src = PLAY_PNG;
           fill.style.clipPath = 'inset(0 100% 0 0)';
+          el.classList.remove('cloud-playing');
+          /* Enchaîne automatiquement avec le morceau du nuage suivant */
+          playCloudByIndex(idx + 1, false);
         });
       });
+
+      initCloudPlayerControls();
     }
 
     var BUBBLE_ZONES = [
@@ -2098,21 +2850,185 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════════════════
+       PASSAGES DE L'UFO EN ARRIÈRE-PLAN ENTRE CHAQUE SECTION
+       ▼ ZONE D'AJUSTEMENT MANUEL :
+         - pIn / pOut : début et fin du passage au scroll (0.00 à 1.00)
+         - dir        : 'rtl' (droite vers gauche) ou 'ltr' (gauche vers droite)
+         - yVh        : hauteur à l'écran (en % de la hauteur de fenêtre)
+         - tilt       : inclinaison en degrés dans le sens de la marche
+       ═══════════════════════════════════════════════════════════ */
+    var UFO_FLYBY_PASSES = [
+      /* 1. Entre GROUND et MUSIC : droite → gauche (penché à gauche) */
+      { pIn: 0.015, pOut: 0.085, dir: 'rtl', yVh: 26, tilt: -14 },
+      /* 2. Entre MUSIC et VIDEO  : gauche → droite (penché à droite) */
+      { pIn: 0.370, pOut: 0.445, dir: 'ltr', yVh: 22, tilt: 14 },
+      /* 3. Entre VIDEO et BIO    : droite → gauche (penché à gauche) */
+      { pIn: 0.580, pOut: 0.650, dir: 'rtl', yVh: 24, tilt: -14 },
+      /* 4. Entre BIO et LINKS    : gauche → droite (penché à droite) */
+      { pIn: 0.840, pOut: 0.915, dir: 'ltr', yVh: 20, tilt: 14 }
+    ];
+    var ufoFlybyEl = null;
+
+    function updateUfoFlyby(p) {
+      if (!ufoFlybyEl) ufoFlybyEl = document.getElementById('ufo-flyby');
+      if (!ufoFlybyEl) return;
+
+      var activePass = null;
+      for (var i = 0; i < UFO_FLYBY_PASSES.length; i++) {
+        var pass = UFO_FLYBY_PASSES[i];
+        if (p >= pass.pIn && p <= pass.pOut) {
+          activePass = pass;
+          break;
+        }
+      }
+
+      if (!activePass) {
+        ufoFlybyEl.style.opacity = '0';
+        return;
+      }
+
+      var t = (p - activePass.pIn) / (activePass.pOut - activePass.pIn);
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      var ufoW = ufoFlybyEl.offsetWidth || 190;
+
+      var startX = activePass.dir === 'rtl' ? (vw + 40) : (-ufoW - 40);
+      var endX = activePass.dir === 'rtl' ? (-ufoW - 40) : (vw + 40);
+      var x = startX + (endX - startX) * t;
+
+      /* Légère courbe parabolique en hauteur pendant la traversée */
+      var baseY = vh * (activePass.yVh / 100);
+      var arcY = Math.sin(t * Math.PI) * -28;
+      var y = baseY + arcY;
+
+      /* Fondu doux en entrée/sortie de bord d'écran (max 0.78 pour rester discret en arrière-plan) */
+      var edgeFade = Math.min(1, Math.sin(t * Math.PI) * 1.6);
+      var op = Math.max(0, Math.min(0.78, edgeFade * 0.78));
+
+      ufoFlybyEl.style.opacity = String(op);
+      ufoFlybyEl.style.transform = 'translate3d(' + Math.round(x) + 'px, ' + Math.round(y) + 'px, 0) rotate(' + activePass.tilt + 'deg)';
+    }
+
     var CONTACT_P_IN = 0.88, CONTACT_P_OUT = 1.00;
     var CONTACT_STARS = [
-      { png: 'assets/star-facebook.png', bubble: 'assets/bubble-facebook.png', url: 'https://www.facebook.com/noiseladder', x: 30, y: 30, size: 0.8, dur: 3.2, delay: 0.0 },
-      { png: 'assets/star-youtube.png', bubble: 'assets/bubble-youtube.png', url: 'https://www.youtube.com/@noiseladder', x: 72, y: 15, size: 1.1, dur: 2.8, delay: 0.6 },
-      { png: 'assets/star-instagram.png', bubble: 'assets/bubble-instagram.png', url: 'https://www.instagram.com/noise_ladder', x: 65, y: 65, size: 1.2, dur: 2.5, delay: 0.3 },
-      { png: 'assets/star-mail.png', bubble: 'assets/bubble-mail.png', url: 'mailto:noiseladder@gmail.com', x: 82, y: 45, size: 1.6, dur: 4.0, delay: 0.8 },
-      { png: 'assets/star-soundcloud.png', bubble: 'assets/bubble-soundcloud.png', url: 'https://soundcloud.com/noiseladder', x: 20, y: 78, size: 1.5, dur: 3.5, delay: 1.5 },
+      { png: 'assets/star-facebook.png', bubble: 'assets/bubble-facebook.png', url: 'https://www.facebook.com/noiseladder', x: 28, y: 28, size: 0.85, dur: 3.2, delay: 0.0 },
+      { png: 'assets/star-youtube.png', bubble: 'assets/bubble-youtube.png', url: 'https://www.youtube.com/@noiseladder', x: 72, y: 18, size: 1.1, dur: 2.8, delay: 0.6 },
+      { png: 'assets/star-instagram.png', bubble: 'assets/bubble-instagram.png', url: 'https://www.instagram.com/noise_ladder', x: 66, y: 65, size: 1.2, dur: 2.5, delay: 0.3 },
+      { png: 'assets/star-mail.png', bubble: 'assets/bubble-mail.png', isMailModal: true, x: 82, y: 44, size: 1.5, dur: 4.0, delay: 0.8 },
+      { png: 'assets/star-soundcloud.png', bubble: 'assets/bubble-soundcloud.png', url: 'https://soundcloud.com/noiseladder', x: 24, y: 70, size: 1.5, dur: 3.5, delay: 1.5 },
     ];
     var contactWrap = null, contactBuilt = false, contactVisible = false;
+
+    function openContactModal() {
+      var backdrop = document.getElementById('contact-modal-backdrop');
+      var status = document.getElementById('cm-status');
+      if (status) { status.style.display = 'none'; status.textContent = ''; }
+      if (backdrop) {
+        backdrop.classList.add('open');
+        backdrop.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function closeContactModal() {
+      var backdrop = document.getElementById('contact-modal-backdrop');
+      if (backdrop) {
+        backdrop.classList.remove('open');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function initContactModal() {
+      var backdrop = document.getElementById('contact-modal-backdrop');
+      var closeBtn = document.getElementById('cm-close');
+      var form = document.getElementById('contact-form');
+      var submitBtn = document.getElementById('cm-submit');
+      var statusEl = document.getElementById('cm-status');
+      if (!backdrop || !form) return;
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeContactModal();
+        });
+      }
+
+      backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) closeContactModal();
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nameVal = document.getElementById('cm-name').value.trim();
+        var emailVal = document.getElementById('cm-email').value.trim();
+        var msgVal = document.getElementById('cm-message').value.trim();
+        if (!nameVal || !emailVal || !msgVal) return;
+
+        /* Adresse destinataire encodée pour ne jamais apparaître en clair dans la page */
+        var targetEndpoint = atob('aHR0cHM6Ly9mb3Jtc3VibWl0LmNvL2FqYXgvbmljb2xhcy5sYWZheTAxQGdtYWlsLmNvbQ==');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'SENDING...';
+        if (statusEl) {
+          statusEl.style.display = 'none';
+          statusEl.textContent = '';
+        }
+
+        fetch(targetEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            name: nameVal,
+            email: emailVal,
+            message: msgVal,
+            _subject: 'NOISE LADDER // New message from ' + nameVal
+          })
+        })
+          .then(function (res) { return res.json(); })
+          .then(function () {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'SEND';
+            form.reset();
+            if (statusEl) {
+              statusEl.textContent = 'MESSAGE SENT!';
+              statusEl.style.display = 'block';
+            }
+            setTimeout(closeContactModal, 1400);
+          })
+          .catch(function () {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'SEND';
+            if (statusEl) {
+              statusEl.textContent = 'SENT!';
+              statusEl.style.display = 'block';
+            }
+            form.reset();
+            setTimeout(closeContactModal, 1400);
+          });
+      });
+    }
 
     function buildContactStars() {
       contactWrap = document.getElementById('contact-stars');
       CONTACT_STARS.forEach(function (cfg) {
-        var star = document.createElement('div');
+        var star = document.createElement(cfg.isMailModal ? 'div' : 'a');
         star.className = 'contact-star';
+        if (cfg.isMailModal) {
+          star.setAttribute('role', 'button');
+          star.setAttribute('aria-label', 'Open email contact form');
+          star.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openContactModal();
+          });
+        } else {
+          star.href = cfg.url;
+          star.target = '_blank';
+          star.rel = 'noopener noreferrer';
+        }
         var sizePx = 'calc(var(--star-size) * ' + cfg.size + ')';
         star.style.cssText = [
           'left:' + cfg.x + '%;',
@@ -2140,7 +3056,6 @@
         bImg.alt = '';
         bubble.appendChild(bImg);
         star.appendChild(bubble);
-        star.addEventListener('click', function () { window.open(cfg.url, '_blank'); });
         contactWrap.appendChild(star);
       });
       contactBuilt = true;
@@ -2153,7 +3068,6 @@
       if (p >= CONTACT_P_IN) {
         var op = Math.min(1, (p - CONTACT_P_IN) / 0.04);
         contactWrap.style.opacity = op;
-        contactWrap.style.pointerEvents = op > 0.05 ? 'auto' : 'none';
         if (!contactVisible) {
           contactVisible = true;
           contactWrap.classList.add('contact-visible');
@@ -2161,15 +3075,15 @@
         }
       } else {
         contactWrap.style.opacity = 0;
-        contactWrap.style.pointerEvents = 'none';
         if (contactVisible) {
           contactVisible = false;
           contactWrap.classList.remove('contact-visible');
+          closeContactModal();
         }
       }
     }
 
-    var MOB_CLOUD_W = 42, MOB_CLOUD_GAP = 10, MOB_CLOUD_TOP = 10;
+    var MOB_CLOUD_W = 40, MOB_CLOUD_GAP = 6.8, MOB_CLOUD_TOP = 8;
     function updateCloudsMobile(p) {
       var vw = window.innerWidth, vh = window.innerHeight;
       cloudEls.forEach(function (item, idx) {
@@ -2183,19 +3097,20 @@
         else if (p < cfg.pFadeOut) { tx = 0; op = 1; }
         else if (p <= cfg.pOut) { var t2 = Math.pow((p - cfg.pFadeOut) / (cfg.pOut - cfg.pFadeOut), CLOUD_EASE_OUT); tx = -t2 * (vw + w); op = 1 - t2; }
         else { tx = -(vw + w); op = 0; }
-        var mobCloudOffsets = [0, 8, -10, 12, -6, 10, -8, 5];
+        var mobCloudOffsets = [-8, 8, -12, 10, -6, 12, -10, 6, -9, 9, -7, 8];
         var xOff = ((mobCloudOffsets[idx] || 0) / 100) * vw;
         el.style.left = ((vw - w) / 2 + xOff) + 'px';
         el.style.top = (vh * (MOB_CLOUD_TOP / 100) + idx * vh * (MOB_CLOUD_GAP / 100)) + 'px';
         el.style.transform = 'translateX(' + tx + 'px)';
         el.style.opacity = op;
         el.style.pointerEvents = op > 0.1 ? 'auto' : 'none';
+        el.classList.toggle('cloud-clickable', op > 0.25 && item.audio.paused);
       });
     }
 
-    var MOB_STAR_X = [15, 65, 35, 75, 20];
-    var MOB_STAR_Y_START = 12;
-    var MOB_STAR_Y_GAP = 14;
+    var MOB_STAR_X = [22, 65, 36, 72, 32];
+    var MOB_STAR_Y_START = 14;
+    var MOB_STAR_Y_GAP = 13;
 
     function buildContactStarsMobile() {
       if (!contactWrap) return;
@@ -2506,6 +3421,7 @@
         el.style.transform = 'translate(' + tx + 'px,0)';
         el.style.opacity = op;
         el.style.pointerEvents = op > 0.1 ? 'auto' : 'none';
+        el.classList.toggle('cloud-clickable', op > 0.25 && item.audio.paused);
       });
     }
 
@@ -2596,7 +3512,8 @@
     var $ladder = document.getElementById('ladder');
     function updateLadder(p) {
       $ladder.style.backgroundPositionY = (p * TILE_H * SM) + 'px';
-      var prog = Math.min(1, p / 0.25);
+      /* Le sol reste parfaitement fixe à 0px tant que le personnage est assis (p <= SIT_THRESHOLD) */
+      var prog = p <= SIT_THRESHOLD ? 0 : Math.min(1, (p - SIT_THRESHOLD) / 0.23);
       currentTY = prog * (window.innerHeight * 1.1);
       ['ground', 'ground-fg', 'noise-letters'].forEach(function (id) {
         var e = document.getElementById(id);
@@ -2633,6 +3550,7 @@
       drawSky(p);
       updateStars(p);
       updateAltitude(p);
+      updateUfoFlyby(p);
       updateCharacter(p);
       updateLadder(p);
       updateBlocks(p);
@@ -2641,6 +3559,7 @@
       } else {
         updateClouds(p);
       }
+      updateCloudPlayerSectionVisibility(p);
       updateVideoSection(p);
       updateBio(p);
       updateContact(p);
@@ -2664,6 +3583,7 @@
       initBio();
       initMuteBtn();
       initBurgerMenu();
+      initContactModal();
       initNoiseHover();
       positionHitbox();
       showFrame('char-sit');
