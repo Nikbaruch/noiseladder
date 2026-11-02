@@ -873,6 +873,7 @@
    PLAYER AUDIO EN BAS D'ÉCRAN (MÊME ESPRIT BD QUE LE MENU BURGER)
    Apparaît au clic sur un nuage et disparaît automatiquement
    dès que l'on quitte la section musique.
+   ▼ ZONE D'AJUSTEMENT : width (largeur fixe du lecteur desktop)
    ═══════════════════════════════════════════════════════════ */
     #cloud-player {
       position: fixed;
@@ -886,12 +887,15 @@
       border: var(--ui-border-w, 1.5px) solid var(--burger-border);
       border-radius: 3px;
       box-shadow: var(--ui-shadow-offset, 2px) var(--ui-shadow-offset, 2px) 0px var(--burger-border);
-      padding: 8px 14px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      min-width: 310px;
-      max-width: 90vw;
+      gap: 14px;
+      /* Largeur strictement fixe et plus longue : ne change jamais selon le titre */
+      width: 520px;
+      min-width: 520px;
+      max-width: calc(100vw - 220px);
+      height: 54px;
       user-select: none;
       transition:
         transform 0.32s cubic-bezier(0.22, 1.25, 0.36, 1),
@@ -943,8 +947,10 @@
     }
 
     .cp-info {
-      flex: 1;
-      min-width: 140px;
+      flex: 1 1 0%;
+      width: 0;
+      /* Force Flexbox à ne jamais élargir ni rétrécir le lecteur selon le texte */
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 5px;
@@ -964,26 +970,43 @@
 
     #cp-progress-wrap {
       width: 100%;
-      height: 8px;
+      height: 12px;
       background: rgba(22, 19, 43, 0.18);
-      border: 1px solid var(--burger-border);
-      border-radius: 2px;
+      border: var(--ui-border-w, 1.5px) solid var(--burger-border);
+      border-radius: 3px;
       cursor: pointer;
       position: relative;
-      overflow: hidden;
+      touch-action: none;
     }
 
     #cp-progress-bar {
       width: 0%;
       height: 100%;
       background: var(--burger-border);
-      transition: width 0.1s linear;
+      pointer-events: none;
+      position: relative;
     }
 
-    /* Bouton lien SoundCloud intégré à droite dans le lecteur audio */
+    /* Curseur visuel sur la barre de progression pour montrer qu'on peut avancer/glisser */
+    #cp-progress-bar::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 14px;
+      background: var(--burger-bg-hover, #f7e4b2);
+      border: 1.5px solid var(--burger-border);
+      border-radius: 2px;
+      box-shadow: 1px 1px 0px var(--burger-border);
+    }
+
+    /* Bouton lien SoundCloud intégré à droite dans le lecteur audio (uniquement le logo, non tronqué) */
     #cp-soundcloud {
+      width: 38px;
       height: 34px;
-      padding: 0 9px;
+      padding: 4px;
       background: #ff5500;
       border: var(--ui-border-w, 1.5px) solid var(--burger-border);
       border-radius: 2px;
@@ -993,13 +1016,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
       flex-shrink: 0;
-      font-family: "Luckiest Guy", cursive, sans-serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
-      padding-top: 2px;
       cursor: pointer;
+      overflow: visible;
       transition: transform 0.14s ease, filter 0.14s ease;
     }
 
@@ -1013,11 +1032,12 @@
     }
 
     #cp-soundcloud svg {
-      width: 18px;
-      height: 18px;
+      width: 26px;
+      height: 16px;
       fill: currentColor;
       flex-shrink: 0;
-      margin-top: -2px;
+      display: block;
+      overflow: visible;
     }
 
 
@@ -1355,6 +1375,8 @@
 
     /* ═══════════════════════════════════════════════════════════
    SATELLITE PLAYLIST DESKTOP & MOBILE
+   z-index: 20 → derrière l'échelle (24) et le personnage (30),
+   mais devant l'écran vidéo (10)
    ═══════════════════════════════════════════════════════════ */
     #playlist-sat-desktop {
       display: block;
@@ -1363,7 +1385,7 @@
       bottom: var(--psat-bottom);
       width: var(--psat-w);
       height: var(--psat-h);
-      z-index: 35;
+      z-index: 20;
       pointer-events: none;
       /* Départ : hors écran à gauche et invisible */
       transform: translateX(calc(-100vw - var(--psat-w)));
@@ -1627,7 +1649,7 @@
         background-position: center var(--nl-y);
       }
 
-      /* Bulle BD placée juste au-dessus du bonnet du personnage abaissé sur tablette */
+      /* Bulle BD placée juste au-dessus du personnage abaissé sur tablette */
       #speech-bubble {
         bottom: 430px;
       }
@@ -1784,7 +1806,7 @@
 
       /* ── Satellite playlist mobile ──
       Départ hors-écran à gauche (transform: translateX(-180vw)) et opacity: 0
-      pour qu'il n'apparaisse JAMAIS hors de la section vidéo ! */
+      z-index: 20 pour passer derrière l'échelle (24) et le personnage (30) */
       #playlist-sat-mob {
         display: block !important;
         position: fixed;
@@ -1792,7 +1814,7 @@
         bottom: 3vw;
         width: 84vw;
         height: 42vw;
-        z-index: 35;
+        z-index: 20;
         pointer-events: none;
         transform: translateX(calc(-100vw - 84vw));
         opacity: 0;
@@ -1912,14 +1934,16 @@
         border-width: var(--ui-border-w, 1.5px);
       }
 
-      /* ── Player Audio en bas à droite du bouton burger sur Mobile ── */
+      /* ── Player Audio en bas à droite du bouton burger sur Mobile (largeur fixe) ── */
       #cloud-player {
         bottom: 3.5vw;
         left: auto;
         right: 3vw;
         transform: translate(0, 150%);
-        min-width: 0;
-        width: 76vw;
+        width: 78vw;
+        min-width: 78vw;
+        max-width: 78vw;
+        height: 12vw;
         padding: 1.8vw 2.8vw;
         gap: 2.2vw;
       }
@@ -1942,15 +1966,19 @@
         font-size: 3.1vw;
       }
 
+      #cp-progress-wrap {
+        height: 2.8vw;
+      }
+
       #cp-soundcloud {
+        width: 9vw;
         height: 7.8vw;
-        padding: 0 2vw;
-        font-size: 2.6vw;
+        padding: 0.8vw;
       }
 
       #cp-soundcloud svg {
-        width: 4.2vw;
-        height: 4.2vw;
+        width: 6.4vw;
+        height: 4vw;
       }
     }
   </style>
@@ -2003,18 +2031,22 @@
       </button>
     </div>
     <div class="cp-info">
-      <div id="cp-title">01/12 · MACHINE HATRED</div>
-      <div id="cp-progress-wrap" title="Click to seek">
+      <div id="cp-title">01/12 · We want Moshiach now</div>
+      <div id="cp-progress-wrap" title="Click or drag to seek">
         <div id="cp-progress-bar"></div>
       </div>
     </div>
     <a id="cp-soundcloud" href="https://soundcloud.com/noiseladder" target="_blank" rel="noopener noreferrer"
       title="Listen on SoundCloud" aria-label="Noise Ladder on SoundCloud">
-      <svg viewBox="0 0 24 24">
+      <svg viewBox="0 0 32 18" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="1.6" height="6" rx="0.8" />
+        <rect x="3" y="6.5" width="1.6" height="8.5" rx="0.8" />
+        <rect x="6" y="4.5" width="1.6" height="10.5" rx="0.8" />
+        <rect x="9" y="6" width="1.6" height="9" rx="0.8" />
+        <rect x="12" y="2.5" width="1.6" height="12.5" rx="0.8" />
         <path
-          d="M11.56 8.87V17h8.76c1.85 0 3.35-1.5 3.35-3.35 0-1.72-1.3-3.14-2.97-3.33-.35-2.67-2.63-4.73-5.4-4.73-1.52 0-2.9.63-3.74 1.28zm-2.14.83v7.3h1.07V9.3c-.38.1-.73.23-1.07.4zm-2.13 1.32v5.98h1.07v-6.2c-.38.04-.73.12-1.07.22zm-2.14 1.48v4.5h1.07v-4.65c-.37.02-.73.07-1.07.15zm-2.13.92V17h1.06v-3.8c-.4.07-.75.15-1.06.22zM1 14.35v1.9c.3.08.62.13.96.15v-2.2c-.34.02-.66.07-.96.15z" />
+          d="M15.5 2.1C16.5 1.4 17.8 1 19.2 1c3.5 0 6.4 2.7 6.7 6.1.4-.1.9-.2 1.4-.2 2.6 0 4.7 2.1 4.7 4.6 0 2.5-2.1 4.5-4.7 4.5H15.5c-.6 0-1-.4-1-1V3.1c0-.4.4-.8 1-1z" />
       </svg>
-      <span>SC</span>
     </a>
   </div>
 
@@ -2137,21 +2169,21 @@
        - mp3  : chemin vers ton fichier audio dans le dossier assets/
        - name : titre affiché dans le player en bas de l'écran
        - png  : image du nuage (cloud-1.png à cloud-9.png)
+       - z    : profondeur d'empilement (entre 10 et 23, < 24 pour rester sous l'échelle)
        ═══════════════════════════════════════════════════════════════════════════ */
     var CLOUD_CONFIG = [
-      { png: 'assets/cloud-1.png', mp3: 'assets/track-01.mp3', name: 'We want Moshiach now', w: 440, h: 245, side: 'left', vPos: 82, hOff: 90, pIn: 0.04, pFull: 0.10, pFadeOut: 0.34, pOut: 0.41, z: 25 },
-      { png: 'assets/cloud-2.png', mp3: 'assets/track-02.mp3', name: 'We like to book it', w: 390, h: 240, side: 'right', vPos: 82, hOff: 90, pIn: 0.05, pFull: 0.11, pFadeOut: 0.34, pOut: 0.41, z: 200 },
-      { png: 'assets/cloud-3.png', mp3: 'assets/track-03.mp3', name: 'Tarantula', w: 390, h: 195, side: 'left', vPos: 65, hOff: 15, pIn: 0.07, pFull: 0.13, pFadeOut: 0.35, pOut: 0.42, z: 15 },
-      { png: 'assets/cloud-4.png', mp3: 'assets/track-04.mp3', name: 'Rebbe core', w: 300, h: 170, side: 'right', vPos: 20, hOff: 15, pIn: 0.08, pFull: 0.14, pFadeOut: 0.35, pOut: 0.42, z: 10 },
-      { png: 'assets/cloud-5.png', mp3: 'assets/track-05.mp3', name: 'Degeneration', w: 390, h: 225, side: 'right', vPos: 62, hOff: 10, pIn: 0.09, pFull: 0.15, pFadeOut: 0.36, pOut: 0.42, z: 12 },
-      { png: 'assets/cloud-6.png', mp3: 'assets/track-06.mp3', name: 'Dark forest', w: 360, h: 195, side: 'right', vPos: 38, hOff: 190, pIn: 0.11, pFull: 0.17, pFadeOut: 0.36, pOut: 0.43, z: 5 },
-      { png: 'assets/cloud-7.png', mp3: 'assets/track-07.mp3', name: 'Total destruction', w: 310, h: 180, side: 'left', vPos: 42, hOff: 15, pIn: 0.13, pFull: 0.19, pFadeOut: 0.37, pOut: 0.43, z: 14 },
-      { png: 'assets/cloud-8.png', mp3: 'assets/track-08.mp3', name: 'All system reboot', w: 330, h: 185, side: 'left', vPos: 18, hOff: 60, pIn: 0.14, pFull: 0.20, pFadeOut: 0.37, pOut: 0.43, z: 16 },
+      { png: 'assets/cloud-1.png', mp3: 'assets/track-01.mp3', name: 'We want Moshiach now', w: 440, h: 245, side: 'left', vPos: 82, hOff: 90, pIn: 0.04, pFull: 0.10, pFadeOut: 0.34, pOut: 0.41, z: 22 },
+      { png: 'assets/cloud-2.png', mp3: 'assets/track-02.mp3', name: 'We like to book it', w: 390, h: 240, side: 'right', vPos: 82, hOff: 90, pIn: 0.05, pFull: 0.11, pFadeOut: 0.34, pOut: 0.41, z: 22 },
+      { png: 'assets/cloud-3.png', mp3: 'assets/track-03.mp3', name: 'Tarantula', w: 390, h: 195, side: 'left', vPos: 65, hOff: 15, pIn: 0.07, pFull: 0.13, pFadeOut: 0.35, pOut: 0.42, z: 18 },
+      { png: 'assets/cloud-4.png', mp3: 'assets/track-04.mp3', name: 'Rebbe core', w: 300, h: 170, side: 'right', vPos: 20, hOff: 15, pIn: 0.08, pFull: 0.14, pFadeOut: 0.35, pOut: 0.42, z: 16 },
+      { png: 'assets/cloud-5.png', mp3: 'assets/track-05.mp3', name: 'Degeneration', w: 390, h: 225, side: 'right', vPos: 62, hOff: 10, pIn: 0.09, pFull: 0.15, pFadeOut: 0.36, pOut: 0.42, z: 17 },
+      { png: 'assets/cloud-6.png', mp3: 'assets/track-06.mp3', name: 'Dark forest', w: 360, h: 195, side: 'right', vPos: 38, hOff: 190, pIn: 0.11, pFull: 0.17, pFadeOut: 0.36, pOut: 0.43, z: 15 },
+      { png: 'assets/cloud-7.png', mp3: 'assets/track-07.mp3', name: 'Total destruction', w: 310, h: 180, side: 'left', vPos: 42, hOff: 15, pIn: 0.13, pFull: 0.19, pFadeOut: 0.37, pOut: 0.43, z: 17 },
+      { png: 'assets/cloud-8.png', mp3: 'assets/track-08.mp3', name: 'All system reboot', w: 330, h: 185, side: 'left', vPos: 18, hOff: 60, pIn: 0.14, pFull: 0.20, pFadeOut: 0.37, pOut: 0.43, z: 19 },
       { png: 'assets/cloud-9.png', mp3: 'assets/track-09.mp3', name: 'Dark ritual', w: 295, h: 168, side: 'left', vPos: 28, hOff: 205, pIn: 0.16, pFull: 0.22, pFadeOut: 0.38, pOut: 0.44, z: 21 },
-      /* ▼ Nouveaux nuages supplémentaires (remplace les fichiers mp3 et les titres ci-dessous) ▼ */
-      { png: 'assets/cloud-1.png', mp3: 'assets/track-10.mp3', name: 'IRON LADDER', w: 340, h: 190, side: 'right', vPos: 50, hOff: 150, pIn: 0.17, pFull: 0.23, pFadeOut: 0.38, pOut: 0.44, z: 19 },
-      { png: 'assets/cloud-3.png', mp3: 'assets/track-11.mp3', name: 'HARSH VILNIUS', w: 320, h: 175, side: 'left', vPos: 54, hOff: 175, pIn: 0.18, pFull: 0.24, pFadeOut: 0.38, pOut: 0.44, z: 17 },
-      { png: 'assets/cloud-6.png', mp3: 'assets/track-12.mp3', name: 'REBBE CORE', w: 310, h: 170, side: 'right', vPos: 14, hOff: 170, pIn: 0.19, pFull: 0.25, pFadeOut: 0.39, pOut: 0.44, z: 22 }
+      { png: 'assets/cloud-1.png', mp3: 'assets/track-10.mp3', name: 'Ani le dodi', w: 340, h: 190, side: 'right', vPos: 50, hOff: 150, pIn: 0.17, pFull: 0.23, pFadeOut: 0.38, pOut: 0.44, z: 20 },
+      { png: 'assets/cloud-3.png', mp3: 'assets/track-11.mp3', name: 'Ilya face A', w: 320, h: 175, side: 'left', vPos: 54, hOff: 175, pIn: 0.18, pFull: 0.24, pFadeOut: 0.38, pOut: 0.44, z: 20 },
+      { png: 'assets/cloud-6.png', mp3: 'assets/track-12.mp3', name: 'Dark side of the chicken burn', w: 310, h: 170, side: 'right', vPos: 14, hOff: 170, pIn: 0.19, pFull: 0.25, pFadeOut: 0.39, pOut: 0.44, z: 22 }
     ];
     var CLOUD_EASE_IN = 3, CLOUD_EASE_OUT = 2;
 
@@ -2512,7 +2544,7 @@
       }
     }
 
-    function updateCloudPlayerUI() {
+    function updateCloudPlayerUI(statusSuffix) {
       var item = cloudEls[activeCloudIdx];
       if (!item) return;
       var titleEl = document.getElementById('cp-title');
@@ -2521,10 +2553,10 @@
 
       var numStr = String(activeCloudIdx + 1).padStart(2, '0') + '/' + String(cloudEls.length).padStart(2, '0');
       if (titleEl) {
-        titleEl.textContent = numStr + ' · ' + item.cfg.name;
+        titleEl.textContent = numStr + ' · ' + item.cfg.name.trim() + (statusSuffix ? ' ' + statusSuffix : '');
       }
 
-      var isPlaying = !item.audio.paused;
+      var isPlaying = !item.audio.paused && !item.audio.ended;
       if (playIcon) {
         playIcon.innerHTML = isPlaying
           ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
@@ -2532,20 +2564,41 @@
       }
 
       if (progBar) {
-        var pct = item.audio.duration ? (item.audio.currentTime / item.audio.duration) * 100 : 0;
+        var pct = (item.audio.duration && isFinite(item.audio.duration))
+          ? (item.audio.currentTime / item.audio.duration) * 100
+          : 0;
         progBar.style.width = pct + '%';
       }
 
       cloudEls.forEach(function (c, i) {
-        var playingThis = (i === activeCloudIdx && !c.audio.paused);
+        var playingThis = (i === activeCloudIdx && !c.audio.paused && !c.audio.ended);
         c.el.classList.toggle('cloud-playing', playingThis);
         c.playBtn.src = playingThis ? c.pausePng : c.playPng;
       });
     }
 
+    /* Tente de résoudre automatiquement les variantes de noms de fichiers (.mp3, .MP3, track-8.mp3, track08.mp3...) */
+    function buildAudioCandidatePaths(cfg, idx) {
+      var num = idx + 1;
+      var pad = String(num).padStart(2, '0');
+      var raw = (cfg.mp3 || '').trim();
+      var candidates = [
+        raw,
+        'assets/track-' + pad + '.mp3',
+        'assets/track-' + num + '.mp3',
+        'assets/track' + pad + '.mp3',
+        'assets/track' + num + '.mp3',
+        'assets/track_' + pad + '.mp3',
+        raw.replace(/\.mp3$/i, '.MP3'),
+        raw.replace(/\.mp3$/i, '.wav'),
+        raw.replace(/\.mp3$/i, '.m4a')
+      ];
+      return candidates.filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+    }
+
     function playCloudByIndex(idx, toggleIfSame) {
       if (!cloudEls.length) return;
-      var targetIdx = (idx + cloudEls.length) % cloudEls.length;
+      var targetIdx = ((idx % cloudEls.length) + cloudEls.length) % cloudEls.length;
       var targetItem = cloudEls[targetIdx];
       if (!targetItem) return;
 
@@ -2556,25 +2609,62 @@
       var cp = document.getElementById('cloud-player');
       if (cp) cp.classList.add('visible');
 
+      /* Si on reclique sur le même morceau déjà en cours de lecture -> Pause */
       if (toggleIfSame && targetIdx === activeCloudIdx && !targetItem.audio.paused) {
         targetItem.audio.pause();
         updateCloudPlayerUI();
         return;
       }
 
+      /* Coupe tous les autres nuages proprement */
       cloudEls.forEach(function (other, i) {
         if (i !== targetIdx) {
           cancelCloudFade(other);
           other.audio.pause();
+          try { other.audio.currentTime = 0; } catch (e) { }
           other.playBtn.src = other.playPng;
           other.el.classList.remove('cloud-playing');
         }
       });
 
       activeCloudIdx = targetIdx;
+      targetItem.audio.muted = false;
       targetItem.audio.volume = 1;
-      targetItem.audio.play().catch(function () { });
+
+      if (targetItem.audio.error || targetItem.audio.readyState === 0) {
+        targetItem.audio.load();
+      }
+
       updateCloudPlayerUI();
+
+      var playPromise = targetItem.audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function () {
+          updateCloudPlayerUI();
+        }).catch(function () {
+          tryNextAudioCandidate(targetItem);
+        });
+      }
+    }
+
+    function tryNextAudioCandidate(item) {
+      if (!item || !item.candidates) return;
+      item.candidateIdx = (item.candidateIdx || 0) + 1;
+      if (item.candidateIdx < item.candidates.length) {
+        var nextSrc = item.candidates[item.candidateIdx];
+        item.audio.src = nextSrc;
+        item.audio.load();
+        item.audio.play().then(function () {
+          updateCloudPlayerUI();
+        }).catch(function () {
+          tryNextAudioCandidate(item);
+        });
+      } else {
+        item.candidateIdx = 0;
+        item.audio.src = item.candidates[0];
+        updateCloudPlayerUI('(MISSING ' + item.cfg.mp3 + ')');
+        console.warn('Fichier audio introuvable dans assets/ :', item.cfg.mp3);
+      }
     }
 
     function updateCloudPlayerSectionVisibility(p) {
@@ -2601,14 +2691,14 @@
       var playBtn = document.getElementById('cp-play');
       var nextBtn = document.getElementById('cp-next');
       var progWrap = document.getElementById('cp-progress-wrap');
+      var progBar = document.getElementById('cp-progress-bar');
 
       if (prevBtn) {
         prevBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           var cur = cloudEls[activeCloudIdx];
           if (cur && cur.audio.currentTime > 3) {
-            cur.audio.currentTime = 0;
-            updateCloudPlayerUI();
+            seekCloudAudio(cur, 0);
           } else {
             playCloudByIndex(activeCloudIdx - 1, false);
           }
@@ -2629,16 +2719,101 @@
         });
       }
 
+      /* Fonction d'avance rapide compatible avec les serveurs locaux (python http.server)
+         qui ne supportent pas les requêtes HTTP Byte-Range : convertit le fichier en Blob local
+         si le navigateur refuse de déplacer currentTime */
+      function seekCloudAudio(item, ratio) {
+        if (!item || !item.audio) return;
+        var audio = item.audio;
+        var clamped = Math.max(0, Math.min(1, ratio));
+
+        if (progBar) progBar.style.width = (clamped * 100) + '%';
+
+        var applySeek = function () {
+          var dur = audio.duration;
+          if (!dur || !isFinite(dur)) return;
+          var targetTime = clamped * dur;
+          var prevTime = audio.currentTime;
+          try {
+            audio.currentTime = targetTime;
+          } catch (err) { }
+
+          /* Si le serveur local (ex: python3 -m http.server) ignore le changement de currentTime
+             parce qu'il n'envoie pas "Accept-Ranges: bytes", on charge le MP3 en Blob mémoire */
+          if (!item.blobLoaded && !item.blobLoading && Math.abs(audio.currentTime - targetTime) > 1.5 && targetTime > 1.5 && Math.abs(targetTime - prevTime) > 1.5) {
+            item.blobLoading = true;
+            var wasPlaying = !audio.paused;
+            fetch(audio.currentSrc || audio.src)
+              .then(function (r) { return r.blob(); })
+              .then(function (blob) {
+                var blobUrl = URL.createObjectURL(blob);
+                item.blobLoaded = true;
+                item.blobLoading = false;
+                audio.src = blobUrl;
+                audio.addEventListener('loadedmetadata', function onMeta() {
+                  audio.removeEventListener('loadedmetadata', onMeta);
+                  try { audio.currentTime = clamped * audio.duration; } catch (e) { }
+                  if (wasPlaying) audio.play().catch(function () { });
+                  updateCloudPlayerUI();
+                });
+                audio.load();
+              })
+              .catch(function () { item.blobLoading = false; });
+          } else {
+            if (item.fill && dur) {
+              item.fill.style.clipPath = 'inset(0 ' + (100 - clamped * 100) + '% 0 0)';
+            }
+            updateCloudPlayerUI();
+          }
+        };
+
+        if (audio.readyState >= 1 && audio.duration && isFinite(audio.duration)) {
+          applySeek();
+        } else {
+          audio.addEventListener('loadedmetadata', function onLoaded() {
+            audio.removeEventListener('loadedmetadata', onLoaded);
+            applySeek();
+          });
+          if (audio.readyState === 0) audio.load();
+        }
+      }
+
       if (progWrap) {
-        progWrap.addEventListener('click', function (e) {
+        var isDraggingSeek = false;
+
+        var getRatioFromEvent = function (clientX) {
+          var rect = progWrap.getBoundingClientRect();
+          if (!rect.width) return 0;
+          return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        };
+
+        progWrap.addEventListener('pointerdown', function (e) {
+          e.stopPropagation();
+          isDraggingSeek = true;
+          if (progWrap.setPointerCapture) {
+            try { progWrap.setPointerCapture(e.pointerId); } catch (err) { }
+          }
+          var cur = cloudEls[activeCloudIdx];
+          if (cur) seekCloudAudio(cur, getRatioFromEvent(e.clientX));
+        });
+
+        progWrap.addEventListener('pointermove', function (e) {
+          if (!isDraggingSeek) return;
           e.stopPropagation();
           var cur = cloudEls[activeCloudIdx];
-          if (!cur || !cur.audio.duration) return;
-          var rect = progWrap.getBoundingClientRect();
-          var ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-          cur.audio.currentTime = ratio * cur.audio.duration;
-          updateCloudPlayerUI();
+          if (cur) seekCloudAudio(cur, getRatioFromEvent(e.clientX));
         });
+
+        var stopDragging = function (e) {
+          if (!isDraggingSeek) return;
+          isDraggingSeek = false;
+          if (progWrap.releasePointerCapture && e && e.pointerId !== undefined) {
+            try { progWrap.releasePointerCapture(e.pointerId); } catch (err) { }
+          }
+        };
+
+        progWrap.addEventListener('pointerup', stopDragging);
+        progWrap.addEventListener('pointercancel', stopDragging);
       }
     }
 
@@ -2671,24 +2846,40 @@
         playBtn.alt = 'play';
         el.appendChild(playBtn);
         container.appendChild(el);
-        var audio = new Audio(cfg.mp3);
-        audio.preload = 'metadata';
+
+        /* Création de l'élément Audio avec préchargement et fallback multi-noms */
+        var audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = cfg.mp3.trim();
         SND.register(audio);
-        var item = { el: el, cfg: cfg, audio: audio, fill: fill, playBtn: playBtn, playPng: PLAY_PNG, pausePng: PAUSE_PNG };
+
+        var item = {
+          el: el,
+          cfg: cfg,
+          audio: audio,
+          fill: fill,
+          playBtn: playBtn,
+          playPng: PLAY_PNG,
+          pausePng: PAUSE_PNG,
+          candidates: buildAudioCandidatePaths(cfg, idx),
+          candidateIdx: 0
+        };
         cloudEls.push(item);
 
-        /* Clic sur le nuage ou son bouton Play : lance le morceau et ouvre le player en bas */
+        /* Un seul écouteur de clic sur le conteneur .music-cloud couvre à la fois le nuage et son bouton Play */
         el.addEventListener('click', function (e) {
           e.stopPropagation();
           playCloudByIndex(idx, true);
         });
-        playBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          playCloudByIndex(idx, true);
-        });
 
+        audio.addEventListener('playing', function () {
+          if (idx === activeCloudIdx) updateCloudPlayerUI();
+        });
+        audio.addEventListener('pause', function () {
+          if (idx === activeCloudIdx) updateCloudPlayerUI();
+        });
         audio.addEventListener('timeupdate', function () {
-          if (!audio.duration) return;
+          if (!audio.duration || !isFinite(audio.duration)) return;
           fill.style.clipPath = 'inset(0 ' + (100 - audio.currentTime / audio.duration * 100) + '% 0 0)';
           if (idx === activeCloudIdx) updateCloudPlayerUI();
         });
